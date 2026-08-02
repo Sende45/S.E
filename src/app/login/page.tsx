@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Lock, Mail, ArrowRight } from "lucide-react";
+import { Lock, Mail, ArrowRight, Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [motDePasse, setMotDePasse] = useState("");
+  const [voirMdp, setVoirMdp] = useState(false);
   const [erreur, setErreur] = useState("");
   const [chargement, setChargement] = useState(false);
 
@@ -21,11 +22,15 @@ export default function LoginPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, motDePasse }),
       });
+
+      // Lecture robuste : ne plante pas si la réponse est vide
+      const data = await res.json().catch(() => ({}));
+
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.message || "Connexion impossible");
+        throw new Error(data.message || `Connexion impossible (code ${res.status})`);
       }
       router.push("/dashboard");
+      router.refresh();
     } catch (err) {
       setErreur(err instanceof Error ? err.message : "Connexion impossible");
     } finally {
@@ -71,13 +76,21 @@ export default function LoginPage() {
           <div className="relative mb-6">
             <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--faint)]" />
             <input
-              type="password"
+              type={voirMdp ? "text" : "password"}
               value={motDePasse}
               onChange={(e) => setMotDePasse(e.target.value)}
-              className="se-input pl-10"
+              className="se-input pl-10 pr-10"
               placeholder="••••••••"
               required
             />
+            <button
+              type="button"
+              onClick={() => setVoirMdp((v) => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--faint)] transition-colors hover:text-[var(--gold)]"
+              aria-label={voirMdp ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+            >
+              {voirMdp ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
           </div>
 
           <button

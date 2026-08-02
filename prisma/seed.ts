@@ -27,21 +27,24 @@ async function seedPrestations() {
     { pole: Pole.EVENEMENTIEL, titre: "Coordination jour J", description: "Timing, prestataires, logistique." },
   ];
   for (const p of data) {
-    await prisma.prestation.create({ data: p });
+    // évite les doublons si on relance le seed
+    const existe = await prisma.prestation.findFirst({ where: { titre: p.titre } });
+    if (!existe) await prisma.prestation.create({ data: p });
   }
-  console.log("✅ Prestations créées :", data.length);
+  console.log("✅ Prestations vérifiées :", data.length);
 }
 
 async function seedProduits() {
   const data = [
-    { categorie: CategorieBoutique.VETEMENTS, sousCategorie: "Femme", nom: "Robe de soirée", prix: 45000, stock: 5, nouveaute: true },
-    { categorie: CategorieBoutique.CHAUSSURES, sousCategorie: "Femme", nom: "Escarpins vernis", prix: 32000, stock: 8, nouveaute: true },
-    { categorie: CategorieBoutique.ACCESSOIRES, sousCategorie: "Sacs", nom: "Pochette soirée", prix: 18000, stock: 12 },
+    { categorie: CategorieBoutique.VETEMENTS, sousCategorie: "Femme", nom: "Robe de soirée", prix: 45000, nouveaute: true },
+    { categorie: CategorieBoutique.CHAUSSURES, sousCategorie: "Femme", nom: "Escarpins vernis", prix: 32000, nouveaute: true },
+    { categorie: CategorieBoutique.ACCESSOIRES, sousCategorie: "Sacs", nom: "Pochette soirée", prix: 18000 },
   ];
   for (const p of data) {
-    await prisma.produit.create({ data: p });
+    const existe = await prisma.produit.findFirst({ where: { nom: p.nom } });
+    if (!existe) await prisma.produit.create({ data: p });
   }
-  console.log("✅ Produits créés :", data.length);
+  console.log("✅ Produits vérifiés :", data.length);
 }
 
 async function main() {
