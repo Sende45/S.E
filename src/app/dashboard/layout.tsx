@@ -2,7 +2,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getSession } from "@/lib/auth";
-import { Inbox, Mail, Calendar, Users, LogOut } from "lucide-react";
+import { Inbox, Mail, Calendar, Users, Image as ImageIcon, LogOut } from "lucide-react";
 
 export default async function DashboardLayout({
   children,
@@ -15,13 +15,13 @@ export default async function DashboardLayout({
   const nav = [
     { href: "/dashboard", label: "Demandes", icon: Inbox },
     { href: "/dashboard/messages", label: "Messages", icon: Mail },
+    { href: "/dashboard/realisations", label: "Réalisations", icon: ImageIcon },
     { href: "/dashboard/planning", label: "Planning", icon: Calendar },
     { href: "/dashboard/personnel", label: "Personnel", icon: Users },
   ];
 
   return (
     <div className="grid min-h-screen md:grid-cols-[230px_1fr]">
-      {/* Sidebar */}
       <aside className="border-r border-[var(--border-soft)] bg-[var(--bg-2)] p-5">
         <div className="mb-8 flex items-center gap-2 px-1">
           <span className="grid h-9 w-9 place-items-center rounded-full border border-[var(--gold)] bg-[radial-gradient(circle_at_50%_40%,#2a0f24,#140812)] font-display text-xs font-bold text-[var(--gold)]">

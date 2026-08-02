@@ -113,3 +113,20 @@ model MessageContact {
   traite    Boolean  @default(false)
   createdAt DateTime @default(now())
 }
+
+enum CategorieRealisation {
+  TRAITEUR
+  DECORATION
+  EVENEMENTIEL
+  VETEMENTS
+  CHAUSSURES
+  ACCESSOIRES
+}
+
+model Realisation {
+  id        String               @id @default(cuid())
+  categorie CategorieRealisation
+  titre     String?
+  imageUrl  String
+  createdAt DateTime             @default(now())
+}
