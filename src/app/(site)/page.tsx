@@ -68,7 +68,7 @@ export default function Home() {
             L&apos;excellence S.E
           </span>
           <h1 className="max-w-[15ch] font-display text-5xl font-semibold leading-[1.03] md:text-7xl">
-            Le service de la <em className="italic text-[var(--gold)]">qualité</em> et des saveurs
+            Un service de <em className="italic text-[var(--gold)]">qualité</em> et de saveurs
           </h1>
           <p className="mt-6 max-w-[52ch] text-lg leading-relaxed text-[var(--muted)]">
             Traiteur, décoration, événementiel et boutiques mode — S.E Holding

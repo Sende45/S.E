@@ -13,7 +13,7 @@ export type Produit = {
   cat: string;
   prix: number;
 
-  // Nouvelle propriété
+  // Image provenant de la base de données
   image?: string;
 
   // Compatibilité avec les anciens produits
@@ -50,15 +50,16 @@ export default function ProductGrid({
 
   return (
     <>
-      <div className="mb-7 flex flex-wrap gap-2.5">
+      {/* Filtres */}
+      <div className="mb-8 flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
         {["Tout", ...filtres].map((f) => (
           <button
             key={f}
             onClick={() => setActif(f)}
-            className={`rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
+            className={`whitespace-nowrap rounded-full border px-4 py-2 text-sm font-semibold transition-all ${
               actif === f
                 ? "border-transparent bg-[var(--gold)] text-[#3A1631]"
-                : "border-[var(--border-soft)] bg-[var(--surface)] text-[var(--muted)] hover:border-[var(--gold)]"
+                : "border-[var(--border-soft)] bg-[var(--surface)] text-[var(--muted)] hover:border-[var(--gold)] hover:text-white"
             }`}
           >
             {f}
@@ -66,56 +67,62 @@ export default function ProductGrid({
         ))}
       </div>
 
-      <div className="grid grid-cols-2 gap-5 md:grid-cols-4">
+      {/* Produits */}
+      <div className="grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">
         {liste.map((p) => (
           <div
             key={p.id}
-            className="group overflow-hidden rounded-2xl border border-[var(--border-soft)] bg-[var(--surface)] transition-transform hover:-translate-y-1.5"
+            className="group overflow-hidden rounded-xl sm:rounded-2xl border border-[var(--border-soft)] bg-[var(--surface)] shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
           >
+            {/* Image */}
             <div className="relative aspect-square overflow-hidden">
               {p.image ? (
                 <Image
                   src={p.image}
                   alt={p.nom}
                   fill
+                  sizes="(max-width:640px) 50vw,
+                         (max-width:1024px) 33vw,
+                         25vw"
                   className="object-cover transition-transform duration-500 group-hover:scale-105"
                 />
               ) : (
                 <div
-                  className="grid h-full w-full place-items-center text-5xl"
+                  className="grid h-full w-full place-items-center text-4xl sm:text-5xl"
                   style={{
-                    background: `linear-gradient(135deg, ${
+                    background: `linear-gradient(135deg,${
                       p.from ?? "#6b2a4e"
-                    }, ${p.to ?? "#3a1631"})`,
+                    },${p.to ?? "#3a1631"})`,
                   }}
                 >
                   {p.emoji}
                 </div>
               )}
 
-              <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
 
               {p.nouveaute && (
-                <span className="absolute left-3 top-3 rounded-full bg-[var(--gold)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#3A1631]">
+                <span className="absolute left-2 top-2 rounded-full bg-[var(--gold)] px-2 py-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-wide text-[#3A1631] shadow">
                   Nouveau
                 </span>
               )}
 
-              <button className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-black/30 text-white backdrop-blur-sm">
+              <button className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-black/30 text-white backdrop-blur transition hover:bg-black/50">
                 <Heart className="h-4 w-4" />
               </button>
             </div>
 
-            <div className="p-4">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--gold)]">
+            {/* Contenu */}
+            <div className="p-3 sm:p-4">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--gold)]">
                 {p.cat}
               </div>
 
-              <h3 className="mt-1 font-display text-lg font-semibold">
+              <h3 className="mt-1 line-clamp-2 font-display text-base sm:text-lg font-semibold">
                 {p.nom}
               </h3>
 
-              <div className="mt-2 text-sm font-bold">
+              <div className="mt-2 text-sm sm:text-base font-bold">
                 {p.prix.toLocaleString("fr-FR")}{" "}
                 <span className="text-xs font-medium text-[var(--faint)]">
                   FCFA
@@ -124,10 +131,12 @@ export default function ProductGrid({
 
               <button
                 onClick={() => commanderWhatsApp(p)}
-                className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-[#25D366]/40 bg-[#25D366]/10 py-2.5 text-xs font-bold uppercase tracking-wide text-[#25D366] transition-colors hover:bg-[#25D366] hover:text-white"
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg border border-[#25D366]/40 bg-[#25D366]/10 py-2.5 text-[11px] sm:text-xs font-bold uppercase tracking-wide text-[#25D366] transition-all hover:bg-[#25D366] hover:text-white"
               >
-                <MessageCircle className="h-4 w-4" />
-                Commander sur WhatsApp
+                <MessageCircle className="h-4 w-4 flex-shrink-0" />
+                <span className="truncate">
+                  Commander sur WhatsApp
+                </span>
               </button>
             </div>
           </div>
