@@ -1,4 +1,3 @@
-// prisma/schema.prisma — S.E Holding (boutique = catalogue + WhatsApp)
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,7 +7,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ===================== UTILISATEURS =====================
+////////////////////////////////////////////////////////////
+// UTILISATEURS
+////////////////////////////////////////////////////////////
+
 model User {
   id         String   @id @default(cuid())
   nom        String
@@ -18,7 +20,9 @@ model User {
   telephone  String?
   role       Role     @default(CLIENT)
   actif      Boolean  @default(true)
+
   demandes   Demande[]
+
   createdAt  DateTime @default(now())
 }
 
@@ -28,7 +32,10 @@ enum Role {
   CLIENT
 }
 
-// ===================== SERVICES (traiteur / déco / événementiel) =====================
+////////////////////////////////////////////////////////////
+// SERVICES
+////////////////////////////////////////////////////////////
+
 enum Pole {
   TRAITEUR
   DECORATION
@@ -37,30 +44,49 @@ enum Pole {
 
 model Prestation {
   id            String   @id @default(cuid())
+
   pole          Pole
+
   titre         String
   description   String?
+
   prixIndicatif Int?
+
   photos        String[]
-  actif         Boolean  @default(true)
+
+  actif         Boolean @default(true)
+
   createdAt     DateTime @default(now())
 }
 
-// Demande de devis (services)
+////////////////////////////////////////////////////////////
+// DEMANDES
+////////////////////////////////////////////////////////////
+
 model Demande {
-  id              String        @id @default(cuid())
-  client          User?         @relation(fields: [clientId], references: [id])
+  id              String   @id @default(cuid())
+
+  client          User?    @relation(fields: [clientId], references: [id])
   clientId        String?
+
   nomContact      String
   telephone       String
+
   typeEvenement   String
+
   dateEvenement   DateTime?
+
   nombreInvites   Int?
+
   budgetIndicatif Int?
+
   poles           Pole[]
+
   message         String?
+
   statut          StatutDemande @default(NOUVELLE)
-  createdAt       DateTime      @default(now())
+
+  createdAt       DateTime @default(now())
 }
 
 enum StatutDemande {
@@ -70,18 +96,29 @@ enum StatutDemande {
   REFUSEE
 }
 
-// Personnel interne
+////////////////////////////////////////////////////////////
+// PERSONNEL
+////////////////////////////////////////////////////////////
+
 model Personnel {
   id        String   @id @default(cuid())
+
   nom       String
   prenom    String
+
   fonction  String
+
   telephone String?
-  actif     Boolean  @default(true)
+
+  actif     Boolean @default(true)
+
   createdAt DateTime @default(now())
 }
 
-// ===================== BOUTIQUE (catalogue simple, commande via WhatsApp) =====================
+////////////////////////////////////////////////////////////
+// BOUTIQUE
+////////////////////////////////////////////////////////////
+
 enum CategorieBoutique {
   VETEMENTS
   CHAUSSURES
@@ -89,30 +126,54 @@ enum CategorieBoutique {
 }
 
 model Produit {
-  id            String            @id @default(cuid())
-  categorie     CategorieBoutique
-  sousCategorie String?
-  nom           String
-  description   String?
-  prix          Int
-  photos        String[]
-  nouveaute     Boolean           @default(false)
-  disponible    Boolean           @default(true)
-  actif         Boolean           @default(true)
-  createdAt     DateTime          @default(now())
+  id              String @id @default(cuid())
+
+  categorie       CategorieBoutique
+
+  sousCategorie   String?
+
+  nom             String
+
+  description     String?
+
+  prix            Int
+
+  photos          String[]
+
+  nouveaute       Boolean @default(false)
+
+  disponible      Boolean @default(true)
+
+  actif           Boolean @default(true)
+
+  createdAt       DateTime @default(now())
 }
 
-// ===================== CONTACT =====================
+////////////////////////////////////////////////////////////
+// CONTACT
+////////////////////////////////////////////////////////////
+
 model MessageContact {
-  id        String   @id @default(cuid())
+  id        String @id @default(cuid())
+
   nom       String
+
   telephone String?
+
   email     String?
+
   sujet     String?
+
   message   String
-  traite    Boolean  @default(false)
+
+  traite    Boolean @default(false)
+
   createdAt DateTime @default(now())
 }
+
+////////////////////////////////////////////////////////////
+// REALISATIONS
+////////////////////////////////////////////////////////////
 
 enum CategorieRealisation {
   TRAITEUR
@@ -124,9 +185,112 @@ enum CategorieRealisation {
 }
 
 model Realisation {
-  id        String               @id @default(cuid())
+  id        String @id @default(cuid())
+
   categorie CategorieRealisation
+
   titre     String?
+
   imageUrl  String
-  createdAt DateTime             @default(now())
+
+  createdAt DateTime @default(now())
+}
+
+////////////////////////////////////////////////////////////
+// TRAITEUR
+////////////////////////////////////////////////////////////
+
+enum TypePlat {
+  ENTREE
+  PLAT
+  DESSERT
+  BOISSON
+}
+
+model Plat {
+
+  id            String @id @default(cuid())
+
+  nom           String
+
+  description   String?
+
+  type          TypePlat
+
+  prix          Int?
+
+  imageUrl      String?
+
+  disponible    Boolean @default(true)
+
+  actif         Boolean @default(true)
+
+  menus         MenuPlat[]
+
+  createdAt     DateTime @default(now())
+
+  updatedAt     DateTime @updatedAt
+}
+
+model MenuSemaine {
+
+  id            String @id @default(cuid())
+
+  numeroSemaine Int
+
+  annee         Int
+
+  debut         DateTime
+
+  fin           DateTime
+
+  actif         Boolean @default(true)
+
+  jours         MenuJour[]
+
+  createdAt     DateTime @default(now())
+
+  updatedAt     DateTime @updatedAt
+
+  @@unique([numeroSemaine, annee])
+}
+
+model MenuJour {
+
+  id            String @id @default(cuid())
+
+  menu          MenuSemaine @relation(fields: [menuId], references: [id], onDelete: Cascade)
+
+  menuId        String
+
+  date          DateTime
+
+  jour          String
+
+  actif         Boolean @default(true)
+
+  plats         MenuPlat[]
+
+  createdAt     DateTime @default(now())
+
+  updatedAt     DateTime @updatedAt
+
+  @@unique([menuId, jour])
+}
+
+model MenuPlat {
+
+  id            String @id @default(cuid())
+
+  menuJour      MenuJour @relation(fields: [menuJourId], references: [id], onDelete: Cascade)
+
+  menuJourId    String
+
+  plat          Plat @relation(fields: [platId], references: [id])
+
+  platId        String
+
+  ordre         Int @default(0)
+
+  @@unique([menuJourId, platId])
 }

@@ -2,7 +2,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getSession } from "@/lib/auth";
-import { Inbox, Mail, Calendar, Users, Image as ImageIcon, LogOut } from "lucide-react";
+import { Inbox, Mail, Calendar, Users, Image as ImageIcon, ShoppingBag, LogOut } from "lucide-react";
 
 export default async function DashboardLayout({
   children,
@@ -15,6 +15,7 @@ export default async function DashboardLayout({
   const nav = [
     { href: "/dashboard", label: "Demandes", icon: Inbox },
     { href: "/dashboard/messages", label: "Messages", icon: Mail },
+    { href: "/dashboard/produits", label: "Boutique", icon: ShoppingBag },
     { href: "/dashboard/realisations", label: "Réalisations", icon: ImageIcon },
     { href: "/dashboard/planning", label: "Planning", icon: Calendar },
     { href: "/dashboard/personnel", label: "Personnel", icon: Users },

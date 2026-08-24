@@ -61,30 +61,40 @@ export default function Home() {
     <>
       {/* HERO */}
       <section className="relative overflow-hidden">
-        <div className="pointer-events-none absolute right-[-10%] top-[-20%] h-[420px] w-[420px] rounded-full bg-[radial-gradient(circle,var(--gold),transparent_70%)] opacity-10" />
-        <div className="mx-auto max-w-6xl px-6 py-24">
-          <span className="mb-5 inline-flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.3em] text-[var(--gold)]">
+        <div className="pointer-events-none absolute right-[-30%] top-[-15%] h-64 w-64 rounded-full bg-[radial-gradient(circle,var(--gold),transparent_70%)] opacity-10 sm:h-80 sm:w-80 lg:right-[-10%] lg:top-[-20%] lg:h-[420px] lg:w-[420px]" />
+
+        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 md:py-20 lg:py-28">
+          <span className="mb-5 inline-flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.25em] text-[var(--gold)] sm:text-xs sm:tracking-[0.3em]">
             <span className="inline-block h-1.5 w-1.5 rotate-45 bg-[var(--gold)]" />
-            L&apos;excellence S.E
+            L'excellence S.E
           </span>
-          <h1 className="max-w-[15ch] font-display text-5xl font-semibold leading-[1.03] md:text-7xl">
-            Un service de <em className="italic text-[var(--gold)]">qualité</em> et de saveurs
+
+          <h1 className="max-w-[16ch] font-display text-4xl font-semibold leading-tight sm:text-5xl lg:text-7xl lg:leading-[1.03]">
+            Un service de{" "}
+            <em className="italic text-[var(--gold)]">
+              qualité
+            </em>{" "}
+            et de saveurs
           </h1>
-          <p className="mt-6 max-w-[52ch] text-lg leading-relaxed text-[var(--muted)]">
+
+          <p className="mt-5 max-w-2xl text-base leading-relaxed text-[var(--muted)] sm:text-lg">
             Traiteur, décoration, événementiel et boutiques mode — S.E Holding
-            réunit tous les métiers de la réception d&apos;exception en République
+            réunit tous les métiers de la réception d'exception en République
             Centrafricaine.
           </p>
-          <div className="mt-9 flex flex-wrap gap-4">
+
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <Link
               href="/devis"
-              className="inline-flex items-center gap-2 rounded-lg bg-[linear-gradient(135deg,var(--gold),var(--gold-deep))] px-6 py-3.5 text-sm font-bold text-[#3A1631] shadow-[0_6px_18px_rgba(201,162,39,0.25)] transition-transform hover:-translate-y-0.5"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[linear-gradient(135deg,var(--gold),var(--gold-deep))] px-6 py-3.5 text-sm font-bold text-[#3A1631] shadow-[0_6px_18px_rgba(201,162,39,0.25)] transition-transform hover:-translate-y-0.5 sm:w-auto"
             >
-              Demander un devis <ArrowRight className="h-4 w-4" />
+              Demander un devis
+              <ArrowRight className="h-4 w-4" />
             </Link>
+
             <Link
               href="/boutique"
-              className="inline-flex items-center gap-2 rounded-lg border border-[var(--gold)] px-6 py-3.5 text-sm font-semibold text-[var(--gold)] transition-colors hover:bg-[var(--gold)] hover:text-[#3A1631]"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[var(--gold)] px-6 py-3.5 text-sm font-semibold text-[var(--gold)] transition-colors hover:bg-[var(--gold)] hover:text-[#3A1631] sm:w-auto"
             >
               Visiter la boutique
             </Link>
@@ -93,38 +103,48 @@ export default function Home() {
       </section>
 
       {/* UNIVERS */}
-      <section className="mx-auto max-w-6xl px-6 py-16">
-        <div className="mb-12 text-center">
-          <span className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--gold)]">
+      <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:py-20">
+        <div className="mb-10 text-center lg:mb-14">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.3em] text-[var(--gold)] sm:text-xs">
             Nos univers
           </span>
-          <h2 className="mt-3 font-display text-4xl font-semibold">
+
+          <h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl lg:text-5xl">
             Six métiers, une même exigence
           </h2>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {univers.map((u) => {
             const Icon = u.icon;
+
             return (
               <Link
                 key={u.href}
                 href={u.href}
-                className="group relative overflow-hidden rounded-2xl border border-[var(--border-soft)] bg-[var(--surface)] p-8 transition-transform hover:-translate-y-1.5"
+                className="group relative overflow-hidden rounded-2xl border border-[var(--border-soft)] bg-[var(--surface)] p-6 transition-all duration-300 hover:-translate-y-1 hover:border-[var(--gold)] lg:p-8"
               >
                 <span className="absolute inset-x-0 top-0 h-0.5 bg-[linear-gradient(90deg,transparent,var(--gold),transparent)] opacity-0 transition-opacity group-hover:opacity-100" />
-                <span className="mb-5 grid h-14 w-14 place-items-center rounded-xl border border-[var(--border)] bg-[rgba(201,162,39,0.12)] text-[var(--gold)]">
+
+                <span className="mb-5 grid h-12 w-12 place-items-center rounded-xl border border-[var(--border)] bg-[rgba(201,162,39,0.12)] text-[var(--gold)] lg:h-14 lg:w-14">
                   <Icon className="h-6 w-6" />
                 </span>
-                <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-[var(--gold)]">
+
+                <div className="mb-2 text-[10px] font-bold uppercase tracking-widest text-[var(--gold)]">
                   {u.type === "boutique" ? "Boutique" : "Service"}
                 </div>
-                <h3 className="font-display text-2xl font-semibold">{u.titre}</h3>
+
+                <h3 className="font-display text-xl font-semibold lg:text-2xl">
+                  {u.titre}
+                </h3>
+
                 <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
                   {u.desc}
                 </p>
-                <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--gold)]">
-                  Découvrir <ArrowRight className="h-3.5 w-3.5" />
+
+                <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[var(--gold)]">
+                  Découvrir
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </span>
               </Link>
             );
@@ -133,27 +153,33 @@ export default function Home() {
       </section>
 
       {/* CONTACT */}
-      <section className="bg-[var(--bg-2)] py-16 text-center">
-        <div className="mx-auto max-w-6xl px-6">
+      <section className="bg-[var(--bg-2)] py-14 lg:py-20">
+        <div className="mx-auto max-w-6xl px-4 text-center sm:px-6">
           <span className="inline-block h-1.5 w-1.5 rotate-45 bg-[var(--gold)]" />
-          <h2 className="mt-4 font-display text-4xl font-semibold">
+
+          <h2 className="mt-4 font-display text-3xl font-semibold sm:text-4xl lg:text-5xl">
             Parlons de votre projet
           </h2>
-          <p className="mt-2 text-[var(--muted)]">
-            Une équipe à votre écoute pour vos plus beaux événements.
+
+          <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-[var(--muted)] sm:text-base">
+            Une équipe à votre écoute pour organiser vos plus beaux événements.
           </p>
-          <div className="mt-7 flex flex-wrap justify-center gap-8">
+
+          <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:justify-center">
             <a
               href="tel:+23675437878"
-              className="flex items-center gap-2 font-display text-xl font-semibold text-[var(--gold)]"
+              className="flex items-center justify-center gap-3 rounded-xl border border-[var(--border-soft)] bg-[var(--surface)] px-6 py-4 font-display text-lg font-semibold text-[var(--gold)] transition hover:border-[var(--gold)]"
             >
-              <Phone className="h-5 w-5" /> 75 43 78 78
+              <Phone className="h-5 w-5" />
+              +23674 01 78 78
             </a>
+
             <a
               href="https://wa.me/23674017878"
-              className="flex items-center gap-2 font-display text-xl font-semibold text-[var(--gold)]"
+              className="flex items-center justify-center gap-3 rounded-xl border border-[#25D366]/40 bg-[#25D366]/10 px-6 py-4 font-display text-lg font-semibold text-[#25D366] transition hover:bg-[#25D366] hover:text-white"
             >
-              <MessageCircle className="h-5 w-5" /> 74 01 78 78
+              <MessageCircle className="h-5 w-5" />
+              +236 75 43 78 78
             </a>
           </div>
         </div>
