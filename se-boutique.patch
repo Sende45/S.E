@@ -1,0 +1,1436 @@
+diff --git a/prisma/schema.prisma b/prisma/schema.prisma
+index c504fa2..cf3d844 100644
+--- a/prisma/schema.prisma
++++ b/prisma/schema.prisma
+@@ -147,6 +147,8 @@ model Produit {
+   actif           Boolean @default(true)
+ 
+   createdAt       DateTime @default(now())
++
++  lignesCommande  LigneCommande[]
+ }
+ 
+ ////////////////////////////////////////////////////////////
+@@ -293,4 +295,47 @@ model MenuPlat {
+   ordre         Int @default(0)
+ 
+   @@unique([menuJourId, platId])
+-}
+\ No newline at end of file
++}
++////////////////////////////////////////////////////////////
++// COMMANDES BOUTIQUE (vraie commande en ligne)
++////////////////////////////////////////////////////////////
++enum StatutCommande {
++  NOUVELLE
++  CONFIRMEE
++  EN_PREPARATION
++  EXPEDIEE
++  LIVREE
++  ANNULEE
++}
++
++enum MethodePaiement {
++  LIVRAISON      // paiement à la livraison
++  MOBILE_MONEY   // Orange/MTN/Moov/Wave
++  ESPECES        // espèces / en boutique
++}
++
++model Commande {
++  id              String          @id @default(cuid())
++  numero          String          @unique
++  nomClient       String
++  telephone       String
++  email           String?
++  adresse         String?
++  note            String?
++  methodePaiement MethodePaiement @default(LIVRAISON)
++  statut          StatutCommande  @default(NOUVELLE)
++  total           Int
++  lignes          LigneCommande[]
++  createdAt       DateTime        @default(now())
++}
++
++model LigneCommande {
++  id           String    @id @default(cuid())
++  commande     Commande  @relation(fields: [commandeId], references: [id], onDelete: Cascade)
++  commandeId   String
++  produit      Produit?  @relation(fields: [produitId], references: [id], onDelete: SetNull)
++  produitId    String?
++  nomProduit   String
++  prixUnitaire Int
++  quantite     Int
++}
+diff --git a/src/app/(site)/commande/page.tsx b/src/app/(site)/commande/page.tsx
+new file mode 100644
+index 0000000..561e1fc
+--- /dev/null
++++ b/src/app/(site)/commande/page.tsx
+@@ -0,0 +1,345 @@
++"use client";
++
++import { useState } from "react";
++import Link from "next/link";
++import Image from "next/image";
++import {
++  ArrowLeft,
++  CheckCircle2,
++  Loader2,
++  ShoppingBag,
++  Plus,
++  Minus,
++  Trash2,
++} from "lucide-react";
++import { useCart } from "@/lib/cart";
++
++const PAIEMENTS = [
++  { id: "LIVRAISON", label: "Paiement à la livraison" },
++  { id: "MOBILE_MONEY", label: "Mobile Money" },
++  { id: "ESPECES", label: "Espèces / en boutique" },
++];
++
++export default function CommandePage() {
++  const { items, total, changerQuantite, retirer, vider } = useCart();
++
++  const [form, setForm] = useState({
++    nomClient: "",
++    telephone: "",
++    email: "",
++    adresse: "",
++    note: "",
++    methodePaiement: "LIVRAISON",
++  });
++  const [envoi, setEnvoi] = useState(false);
++  const [erreur, setErreur] = useState("");
++  const [succes, setSucces] = useState<{ numero: string } | null>(null);
++
++  const maj = (champ: string, valeur: string) =>
++    setForm((f) => ({ ...f, [champ]: valeur }));
++
++  const soumettre = async () => {
++    setErreur("");
++    if (!form.nomClient.trim() || !form.telephone.trim()) {
++      setErreur("Le nom et le téléphone sont obligatoires.");
++      return;
++    }
++    if (items.length === 0) {
++      setErreur("Votre panier est vide.");
++      return;
++    }
++
++    setEnvoi(true);
++    try {
++      const res = await fetch("/api/commandes", {
++        method: "POST",
++        headers: { "Content-Type": "application/json" },
++        body: JSON.stringify({
++          ...form,
++          items: items.map((i) => ({
++            produitId: i.id,
++            nom: i.nom,
++            prix: i.prix,
++            quantite: i.quantite,
++          })),
++        }),
++      });
++      const data = await res.json();
++      if (!res.ok) throw new Error(data.message || "Erreur lors de l'envoi.");
++      vider();
++      setSucces({ numero: data.numero });
++    } catch (e) {
++      setErreur(e instanceof Error ? e.message : "Une erreur est survenue.");
++    } finally {
++      setEnvoi(false);
++    }
++  };
++
++  // ---------- Écran de confirmation ----------
++  if (succes) {
++    return (
++      <section className="mx-auto flex min-h-[60vh] max-w-lg flex-col items-center justify-center px-6 py-16 text-center">
++        <CheckCircle2 className="h-16 w-16 text-[#5fbf8f]" />
++        <h1 className="mt-6 font-display text-3xl font-semibold">
++          Commande envoyée !
++        </h1>
++        <p className="mt-3 text-[var(--muted)]">
++          Merci pour votre confiance. Votre commande{" "}
++          <span className="font-semibold text-[var(--gold)]">
++            {succes.numero}
++          </span>{" "}
++          a bien été reçue. Notre équipe vous contactera très vite pour
++          confirmer les détails.
++        </p>
++        <Link
++          href="/boutique"
++          className="mt-8 rounded-lg bg-[linear-gradient(135deg,var(--gold),var(--gold-deep))] px-6 py-3 text-sm font-bold text-[#3A1631] shadow-[0_6px_18px_rgba(201,162,39,0.25)] transition-transform hover:-translate-y-0.5"
++        >
++          Retour à la boutique
++        </Link>
++      </section>
++    );
++  }
++
++  // ---------- Panier vide ----------
++  if (items.length === 0) {
++    return (
++      <section className="mx-auto flex min-h-[60vh] max-w-lg flex-col items-center justify-center px-6 py-16 text-center">
++        <ShoppingBag className="h-14 w-14 text-[var(--faint)]" />
++        <h1 className="mt-6 font-display text-3xl font-semibold">
++          Votre panier est vide
++        </h1>
++        <p className="mt-3 text-[var(--muted)]">
++          Ajoutez des articles depuis la boutique pour passer commande.
++        </p>
++        <Link
++          href="/boutique"
++          className="mt-8 rounded-lg border border-[var(--gold)] px-6 py-3 text-sm font-semibold text-[var(--gold)] transition hover:bg-[var(--gold)] hover:text-[#3A1631]"
++        >
++          Découvrir la boutique
++        </Link>
++      </section>
++    );
++  }
++
++  // ---------- Formulaire de commande ----------
++  return (
++    <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8 md:py-14">
++      <Link
++        href="/boutique"
++        className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-[var(--muted)] transition hover:text-[var(--gold)]"
++      >
++        <ArrowLeft className="h-4 w-4" />
++        Continuer mes achats
++      </Link>
++
++      <h1 className="font-display text-3xl font-semibold sm:text-4xl">
++        Finaliser ma commande
++      </h1>
++
++      <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_380px]">
++        {/* ---- Formulaire client ---- */}
++        <div className="order-2 lg:order-1">
++          <div className="rounded-2xl border border-[var(--border-soft)] bg-[var(--surface)] p-6">
++            <h2 className="font-display text-xl font-semibold">
++              Vos coordonnées
++            </h2>
++
++            <div className="mt-5 grid gap-4 sm:grid-cols-2">
++              <div className="sm:col-span-2">
++                <label className="mb-1.5 block text-sm font-medium text-[var(--muted)]">
++                  Nom complet *
++                </label>
++                <input
++                  className="se-input"
++                  placeholder="Votre nom et prénom"
++                  value={form.nomClient}
++                  onChange={(e) => maj("nomClient", e.target.value)}
++                />
++              </div>
++
++              <div>
++                <label className="mb-1.5 block text-sm font-medium text-[var(--muted)]">
++                  Téléphone *
++                </label>
++                <input
++                  className="se-input"
++                  placeholder="+236 ..."
++                  value={form.telephone}
++                  onChange={(e) => maj("telephone", e.target.value)}
++                />
++              </div>
++
++              <div>
++                <label className="mb-1.5 block text-sm font-medium text-[var(--muted)]">
++                  Email (facultatif)
++                </label>
++                <input
++                  className="se-input"
++                  placeholder="vous@exemple.com"
++                  value={form.email}
++                  onChange={(e) => maj("email", e.target.value)}
++                />
++              </div>
++
++              <div className="sm:col-span-2">
++                <label className="mb-1.5 block text-sm font-medium text-[var(--muted)]">
++                  Adresse de livraison
++                </label>
++                <input
++                  className="se-input"
++                  placeholder="Quartier, ville, point de repère..."
++                  value={form.adresse}
++                  onChange={(e) => maj("adresse", e.target.value)}
++                />
++              </div>
++
++              <div className="sm:col-span-2">
++                <label className="mb-1.5 block text-sm font-medium text-[var(--muted)]">
++                  Note (facultatif)
++                </label>
++                <textarea
++                  className="se-input"
++                  rows={3}
++                  placeholder="Taille, couleur, précisions..."
++                  value={form.note}
++                  onChange={(e) => maj("note", e.target.value)}
++                />
++              </div>
++            </div>
++
++            {/* Mode de paiement */}
++            <h2 className="mt-8 font-display text-xl font-semibold">
++              Mode de paiement
++            </h2>
++            <div className="mt-4 grid gap-3 sm:grid-cols-3">
++              {PAIEMENTS.map((p) => {
++                const actif = form.methodePaiement === p.id;
++                return (
++                  <button
++                    key={p.id}
++                    type="button"
++                    onClick={() => maj("methodePaiement", p.id)}
++                    className={`rounded-xl border px-4 py-3 text-sm font-semibold transition ${
++                      actif
++                        ? "border-[var(--gold)] bg-[rgba(201,162,39,0.12)] text-[var(--gold)]"
++                        : "border-[var(--border-soft)] text-[var(--muted)] hover:border-[var(--gold)]"
++                    }`}
++                  >
++                    {p.label}
++                  </button>
++                );
++              })}
++            </div>
++
++            {erreur && (
++              <p className="mt-5 rounded-lg bg-red-500/10 px-4 py-3 text-sm text-red-400">
++                {erreur}
++              </p>
++            )}
++
++            <button
++              onClick={soumettre}
++              disabled={envoi}
++              className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-[linear-gradient(135deg,var(--gold),var(--gold-deep))] py-3.5 text-sm font-bold text-[#3A1631] shadow-[0_6px_18px_rgba(201,162,39,0.25)] transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
++            >
++              {envoi ? (
++                <>
++                  <Loader2 className="h-4 w-4 animate-spin" />
++                  Envoi en cours...
++                </>
++              ) : (
++                <>Confirmer la commande — {total.toLocaleString("fr-FR")} FCFA</>
++              )}
++            </button>
++          </div>
++        </div>
++
++        {/* ---- Récapitulatif ---- */}
++        <div className="order-1 lg:order-2">
++          <div className="rounded-2xl border border-[var(--border-soft)] bg-[var(--surface)] p-6 lg:sticky lg:top-24">
++            <h2 className="font-display text-xl font-semibold">
++              Votre commande
++            </h2>
++
++            <div className="mt-4 space-y-3">
++              {items.map((i) => (
++                <div key={i.id} className="flex gap-3">
++                  <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-[var(--bg)]">
++                    {i.image ? (
++                      <Image
++                        src={i.image}
++                        alt={i.nom}
++                        fill
++                        sizes="64px"
++                        className="object-cover"
++                      />
++                    ) : (
++                      <div className="grid h-full w-full place-items-center text-xl">
++                        🛍️
++                      </div>
++                    )}
++                  </div>
++
++                  <div className="flex flex-1 flex-col">
++                    <span className="line-clamp-1 text-sm font-semibold">
++                      {i.nom}
++                    </span>
++                    <span className="text-xs text-[var(--gold)]">
++                      {i.prix.toLocaleString("fr-FR")} FCFA
++                    </span>
++
++                    <div className="mt-1 flex items-center justify-between">
++                      <div className="flex items-center gap-1 rounded-lg border border-[var(--border-soft)]">
++                        <button
++                          onClick={() => changerQuantite(i.id, i.quantite - 1)}
++                          className="grid h-6 w-6 place-items-center text-[var(--muted)] transition hover:text-[var(--gold)]"
++                          aria-label="Diminuer"
++                        >
++                          <Minus className="h-3 w-3" />
++                        </button>
++                        <span className="w-5 text-center text-xs font-semibold">
++                          {i.quantite}
++                        </span>
++                        <button
++                          onClick={() => changerQuantite(i.id, i.quantite + 1)}
++                          className="grid h-6 w-6 place-items-center text-[var(--muted)] transition hover:text-[var(--gold)]"
++                          aria-label="Augmenter"
++                        >
++                          <Plus className="h-3 w-3" />
++                        </button>
++                      </div>
++                      <button
++                        onClick={() => retirer(i.id)}
++                        className="grid h-6 w-6 place-items-center rounded text-red-400 transition hover:bg-red-500/10"
++                        aria-label="Retirer"
++                      >
++                        <Trash2 className="h-3.5 w-3.5" />
++                      </button>
++                    </div>
++                  </div>
++
++                  <span className="text-sm font-semibold">
++                    {(i.prix * i.quantite).toLocaleString("fr-FR")}
++                  </span>
++                </div>
++              ))}
++            </div>
++
++            <div className="mt-5 border-t border-[var(--border-soft)] pt-4">
++              <div className="flex items-center justify-between">
++                <span className="text-sm text-[var(--muted)]">Total</span>
++                <span className="font-display text-2xl font-semibold text-[var(--gold)]">
++                  {total.toLocaleString("fr-FR")} FCFA
++                </span>
++              </div>
++              <p className="mt-2 text-xs text-[var(--faint)]">
++                Livraison et frais éventuels confirmés par notre équipe.
++              </p>
++            </div>
++          </div>
++        </div>
++      </div>
++    </section>
++  );
++}
+diff --git a/src/app/(site)/layout.tsx b/src/app/(site)/layout.tsx
+index b9be801..7d907c9 100644
+--- a/src/app/(site)/layout.tsx
++++ b/src/app/(site)/layout.tsx
+@@ -1,5 +1,7 @@
+ import Header from "@/components/Header";
+ import Footer from "@/components/Footer";
++import { CartProvider } from "@/lib/cart";
++import CartDrawer from "@/components/CartDrawer";
+ 
+ export default function PublicLayout({
+   children,
+@@ -7,10 +9,11 @@ export default function PublicLayout({
+   children: React.ReactNode;
+ }) {
+   return (
+-    <>
++    <CartProvider>
+       <Header />
+       <main className="min-h-[60vh]">{children}</main>
+       <Footer />
+-    </>
++      <CartDrawer />
++    </CartProvider>
+   );
+-}
+\ No newline at end of file
++}
+diff --git a/src/app/api/commandes/[id]/route.ts b/src/app/api/commandes/[id]/route.ts
+new file mode 100644
+index 0000000..9b2e32b
+--- /dev/null
++++ b/src/app/api/commandes/[id]/route.ts
+@@ -0,0 +1,49 @@
++import { NextRequest, NextResponse } from "next/server";
++import { prisma } from "@/lib/prisma";
++import { getSession } from "@/lib/auth";
++import { StatutCommande } from "@prisma/client";
++
++type Params = {
++  params: Promise<{ id: string }>;
++};
++
++const STATUTS: StatutCommande[] = [
++  "NOUVELLE",
++  "CONFIRMEE",
++  "EN_PREPARATION",
++  "EXPEDIEE",
++  "LIVREE",
++  "ANNULEE",
++];
++
++// =====================
++// Mettre à jour le statut d'une commande
++// =====================
++export async function PATCH(req: NextRequest, { params }: Params) {
++  const session = await getSession();
++  if (!session || (session.role !== "ADMIN" && session.role !== "STAFF")) {
++    return NextResponse.json({ message: "Non autorisé" }, { status: 401 });
++  }
++
++  try {
++    const { id } = await params;
++    const body = await req.json();
++
++    if (!STATUTS.includes(body.statut)) {
++      return NextResponse.json({ message: "Statut invalide" }, { status: 400 });
++    }
++
++    const commande = await prisma.commande.update({
++      where: { id },
++      data: { statut: body.statut },
++    });
++
++    return NextResponse.json(commande);
++  } catch (error) {
++    console.error("Erreur PATCH /api/commandes/[id]:", error);
++    return NextResponse.json(
++      { message: "Erreur lors de la mise à jour" },
++      { status: 500 }
++    );
++  }
++}
+diff --git a/src/app/api/commandes/route.ts b/src/app/api/commandes/route.ts
+new file mode 100644
+index 0000000..4b4ec19
+--- /dev/null
++++ b/src/app/api/commandes/route.ts
+@@ -0,0 +1,135 @@
++import { NextRequest, NextResponse } from "next/server";
++import { prisma } from "@/lib/prisma";
++import { getSession } from "@/lib/auth";
++import { MethodePaiement } from "@prisma/client";
++
++type ItemEntrant = {
++  produitId?: string;
++  nom?: string;
++  prix?: number;
++  quantite?: number;
++};
++
++const PAIEMENTS: MethodePaiement[] = ["LIVRAISON", "MOBILE_MONEY", "ESPECES"];
++
++function genererNumero() {
++  const d = new Date();
++  const ymd = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(
++    2,
++    "0"
++  )}${String(d.getDate()).padStart(2, "0")}`;
++  const rnd = Math.floor(1000 + Math.random() * 9000);
++  return `SE-${ymd}-${rnd}`;
++}
++
++// =====================
++// Créer une commande (public)
++// =====================
++export async function POST(req: NextRequest) {
++  try {
++    const body = await req.json();
++    const {
++      nomClient,
++      telephone,
++      email,
++      adresse,
++      note,
++      methodePaiement,
++      items,
++    } = body as {
++      nomClient?: string;
++      telephone?: string;
++      email?: string;
++      adresse?: string;
++      note?: string;
++      methodePaiement?: string;
++      items?: ItemEntrant[];
++    };
++
++    if (!nomClient || !telephone) {
++      return NextResponse.json(
++        { message: "Le nom et le téléphone sont requis." },
++        { status: 400 }
++      );
++    }
++    if (!Array.isArray(items) || items.length === 0) {
++      return NextResponse.json(
++        { message: "Votre panier est vide." },
++        { status: 400 }
++      );
++    }
++
++    const methode: MethodePaiement = PAIEMENTS.includes(
++      methodePaiement as MethodePaiement
++    )
++      ? (methodePaiement as MethodePaiement)
++      : "LIVRAISON";
++
++    // On recalcule les prix côté serveur à partir de la base (anti-triche)
++    const ids = items
++      .map((i) => i.produitId)
++      .filter((v): v is string => Boolean(v));
++
++    const produitsBase = ids.length
++      ? await prisma.produit.findMany({ where: { id: { in: ids } } })
++      : [];
++    const parId = new Map(produitsBase.map((p) => [p.id, p]));
++
++    const lignes = items.map((i) => {
++      const base = i.produitId ? parId.get(i.produitId) : undefined;
++      const prixUnitaire = base ? base.prix : Number(i.prix) || 0;
++      const nomProduit = base ? base.nom : String(i.nom ?? "Article");
++      const quantite = Math.max(1, Number(i.quantite) || 1);
++      return {
++        produitId: base ? base.id : null,
++        nomProduit,
++        prixUnitaire,
++        quantite,
++      };
++    });
++
++    const total = lignes.reduce(
++      (s, l) => s + l.prixUnitaire * l.quantite,
++      0
++    );
++
++    const commande = await prisma.commande.create({
++      data: {
++        numero: genererNumero(),
++        nomClient,
++        telephone,
++        email: email || null,
++        adresse: adresse || null,
++        note: note || null,
++        methodePaiement: methode,
++        total,
++        lignes: { create: lignes },
++      },
++    });
++
++    return NextResponse.json(
++      { ok: true, numero: commande.numero, id: commande.id },
++      { status: 201 }
++    );
++  } catch (error) {
++    console.error("Erreur /api/commandes:", error);
++    return NextResponse.json({ message: "Erreur serveur" }, { status: 500 });
++  }
++}
++
++// =====================
++// Lister les commandes (interne)
++// =====================
++export async function GET() {
++  const session = await getSession();
++  if (!session || (session.role !== "ADMIN" && session.role !== "STAFF")) {
++    return NextResponse.json({ message: "Non autorisé" }, { status: 401 });
++  }
++
++  const commandes = await prisma.commande.findMany({
++    orderBy: { createdAt: "desc" },
++    include: { lignes: true },
++  });
++
++  return NextResponse.json(commandes);
++}
+diff --git a/src/app/dashboard/commandes/page.tsx b/src/app/dashboard/commandes/page.tsx
+new file mode 100644
+index 0000000..f4faac4
+--- /dev/null
++++ b/src/app/dashboard/commandes/page.tsx
+@@ -0,0 +1,269 @@
++"use client";
++
++import { useEffect, useState } from "react";
++import {
++  Loader2,
++  Package,
++  Phone,
++  MapPin,
++  CreditCard,
++  ChevronDown,
++} from "lucide-react";
++
++type Ligne = {
++  id: string;
++  nomProduit: string;
++  prixUnitaire: number;
++  quantite: number;
++};
++
++type Commande = {
++  id: string;
++  numero: string;
++  nomClient: string;
++  telephone: string;
++  email: string | null;
++  adresse: string | null;
++  note: string | null;
++  methodePaiement: string;
++  statut: string;
++  total: number;
++  createdAt: string;
++  lignes: Ligne[];
++};
++
++const STATUTS = [
++  { id: "NOUVELLE", label: "Nouvelle" },
++  { id: "CONFIRMEE", label: "Confirmée" },
++  { id: "EN_PREPARATION", label: "En préparation" },
++  { id: "EXPEDIEE", label: "Expédiée" },
++  { id: "LIVREE", label: "Livrée" },
++  { id: "ANNULEE", label: "Annulée" },
++];
++
++const PAIEMENT_LABEL: Record<string, string> = {
++  LIVRAISON: "Paiement à la livraison",
++  MOBILE_MONEY: "Mobile Money",
++  ESPECES: "Espèces / en boutique",
++};
++
++const statutPill: Record<string, string> = {
++  NOUVELLE: "bg-[rgba(228,190,85,0.15)] text-[var(--gold)]",
++  CONFIRMEE: "bg-[rgba(96,165,250,0.16)] text-[#7fb0f5]",
++  EN_PREPARATION: "bg-[rgba(180,140,255,0.16)] text-[#c3a2ff]",
++  EXPEDIEE: "bg-[rgba(120,120,140,0.18)] text-[var(--muted)]",
++  LIVREE: "bg-[rgba(76,175,127,0.16)] text-[#5fbf8f]",
++  ANNULEE: "bg-red-500/15 text-red-400",
++};
++
++export default function CommandesPage() {
++  const [commandes, setCommandes] = useState<Commande[]>([]);
++  const [chargement, setChargement] = useState(true);
++  const [ouvert, setOuvert] = useState<string | null>(null);
++  const [majEnCours, setMajEnCours] = useState<string | null>(null);
++
++  const charger = async () => {
++    const res = await fetch("/api/commandes");
++    if (res.ok) setCommandes(await res.json());
++    setChargement(false);
++  };
++
++  useEffect(() => {
++    charger();
++  }, []);
++
++  const changerStatut = async (id: string, statut: string) => {
++    setMajEnCours(id);
++    // Mise à jour optimiste
++    setCommandes((prev) =>
++      prev.map((c) => (c.id === id ? { ...c, statut } : c))
++    );
++    try {
++      await fetch(`/api/commandes/${id}`, {
++        method: "PATCH",
++        headers: { "Content-Type": "application/json" },
++        body: JSON.stringify({ statut }),
++      });
++    } finally {
++      setMajEnCours(null);
++    }
++  };
++
++  if (chargement) {
++    return (
++      <div className="flex h-64 items-center justify-center text-[var(--muted)]">
++        <Loader2 className="h-6 w-6 animate-spin" />
++      </div>
++    );
++  }
++
++  return (
++    <>
++      <h1 className="font-display text-3xl font-semibold">Commandes</h1>
++      <p className="mb-8 text-sm text-[var(--muted)]">
++        Les commandes passées depuis la boutique en ligne.
++      </p>
++
++      {commandes.length === 0 ? (
++        <div className="rounded-2xl border border-[var(--border-soft)] bg-[var(--surface)] px-6 py-16 text-center">
++          <Package className="mx-auto h-10 w-10 text-[var(--faint)]" />
++          <p className="mt-3 text-sm text-[var(--muted)]">
++            Aucune commande pour le moment.
++          </p>
++        </div>
++      ) : (
++        <div className="space-y-3">
++          {commandes.map((c) => {
++            const estOuvert = ouvert === c.id;
++            return (
++              <div
++                key={c.id}
++                className="overflow-hidden rounded-2xl border border-[var(--border-soft)] bg-[var(--surface)]"
++              >
++                {/* En-tête cliquable */}
++                <button
++                  onClick={() => setOuvert(estOuvert ? null : c.id)}
++                  className="flex w-full items-center gap-4 px-5 py-4 text-left transition hover:bg-[var(--bg-2)]"
++                >
++                  <div className="flex-1">
++                    <div className="flex flex-wrap items-center gap-2">
++                      <span className="font-display text-lg font-semibold">
++                        {c.nomClient}
++                      </span>
++                      <span className="text-xs text-[var(--faint)]">
++                        {c.numero}
++                      </span>
++                    </div>
++                    <div className="mt-0.5 text-xs text-[var(--muted)]">
++                      {c.lignes.reduce((n, l) => n + l.quantite, 0)} article(s) ·{" "}
++                      {new Date(c.createdAt).toLocaleDateString("fr-FR")}
++                    </div>
++                  </div>
++
++                  <span
++                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
++                      statutPill[c.statut] ?? ""
++                    }`}
++                  >
++                    {STATUTS.find((s) => s.id === c.statut)?.label ?? c.statut}
++                  </span>
++
++                  <span className="hidden font-semibold sm:block">
++                    {c.total.toLocaleString("fr-FR")} FCFA
++                  </span>
++
++                  <ChevronDown
++                    className={`h-5 w-5 flex-shrink-0 text-[var(--muted)] transition-transform ${
++                      estOuvert ? "rotate-180" : ""
++                    }`}
++                  />
++                </button>
++
++                {/* Détail */}
++                {estOuvert && (
++                  <div className="border-t border-[var(--border-soft)] px-5 py-4">
++                    <div className="grid gap-6 md:grid-cols-[1fr_260px]">
++                      {/* Articles */}
++                      <div>
++                        <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-[var(--faint)]">
++                          Articles
++                        </h3>
++                        <div className="space-y-2">
++                          {c.lignes.map((l) => (
++                            <div
++                              key={l.id}
++                              className="flex items-center justify-between text-sm"
++                            >
++                              <span>
++                                <span className="font-semibold">
++                                  {l.quantite}×
++                                </span>{" "}
++                                {l.nomProduit}
++                              </span>
++                              <span className="text-[var(--muted)]">
++                                {(l.prixUnitaire * l.quantite).toLocaleString(
++                                  "fr-FR"
++                                )}{" "}
++                                FCFA
++                              </span>
++                            </div>
++                          ))}
++                        </div>
++                        <div className="mt-3 flex items-center justify-between border-t border-[var(--border-soft)] pt-3 text-sm font-bold">
++                          <span>Total</span>
++                          <span className="text-[var(--gold)]">
++                            {c.total.toLocaleString("fr-FR")} FCFA
++                          </span>
++                        </div>
++
++                        {c.note && (
++                          <p className="mt-3 rounded-lg bg-[var(--bg-2)] px-3 py-2 text-xs text-[var(--muted)]">
++                            <span className="font-semibold">Note :</span>{" "}
++                            {c.note}
++                          </p>
++                        )}
++                      </div>
++
++                      {/* Coordonnées + statut */}
++                      <div className="space-y-3 text-sm">
++                        <div className="flex items-center gap-2 text-[var(--muted)]">
++                          <Phone className="h-4 w-4 flex-shrink-0 text-[var(--gold)]" />
++                          <a
++                            href={`tel:${c.telephone}`}
++                            className="hover:text-[var(--gold)]"
++                          >
++                            {c.telephone}
++                          </a>
++                        </div>
++                        {c.adresse && (
++                          <div className="flex items-start gap-2 text-[var(--muted)]">
++                            <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-[var(--gold)]" />
++                            <span>{c.adresse}</span>
++                          </div>
++                        )}
++                        <div className="flex items-center gap-2 text-[var(--muted)]">
++                          <CreditCard className="h-4 w-4 flex-shrink-0 text-[var(--gold)]" />
++                          <span>
++                            {PAIEMENT_LABEL[c.methodePaiement] ??
++                              c.methodePaiement}
++                          </span>
++                        </div>
++
++                        <div>
++                          <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-[var(--faint)]">
++                            Statut
++                          </label>
++                          <div className="relative">
++                            <select
++                              value={c.statut}
++                              onChange={(e) =>
++                                changerStatut(c.id, e.target.value)
++                              }
++                              disabled={majEnCours === c.id}
++                              className="se-input appearance-none pr-9"
++                            >
++                              {STATUTS.map((s) => (
++                                <option key={s.id} value={s.id}>
++                                  {s.label}
++                                </option>
++                              ))}
++                            </select>
++                            {majEnCours === c.id ? (
++                              <Loader2 className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-[var(--muted)]" />
++                            ) : (
++                              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted)]" />
++                            )}
++                          </div>
++                        </div>
++                      </div>
++                    </div>
++                  </div>
++                )}
++              </div>
++            );
++          })}
++        </div>
++      )}
++    </>
++  );
++}
+diff --git a/src/app/dashboard/layout.tsx b/src/app/dashboard/layout.tsx
+index 982fd38..d5bd9dd 100644
+--- a/src/app/dashboard/layout.tsx
++++ b/src/app/dashboard/layout.tsx
+@@ -2,7 +2,17 @@
+ import { redirect } from "next/navigation";
+ import Link from "next/link";
+ import { getSession } from "@/lib/auth";
+-import { Inbox, Mail, Calendar, Users, Image as ImageIcon, ShoppingBag, LogOut } from "lucide-react";
++import {
++  Inbox,
++  Mail,
++  Calendar,
++  Users,
++  Image as ImageIcon,
++  ShoppingBag,
++  ClipboardList,
++  ArrowLeft,
++  LogOut,
++} from "lucide-react";
+ 
+ export default async function DashboardLayout({
+   children,
+@@ -14,6 +24,7 @@ export default async function DashboardLayout({
+ 
+   const nav = [
+     { href: "/dashboard", label: "Demandes", icon: Inbox },
++    { href: "/dashboard/commandes", label: "Commandes", icon: ClipboardList },
+     { href: "/dashboard/messages", label: "Messages", icon: Mail },
+     { href: "/dashboard/produits", label: "Boutique", icon: ShoppingBag },
+     { href: "/dashboard/realisations", label: "Réalisations", icon: ImageIcon },
+@@ -56,7 +67,27 @@ export default async function DashboardLayout({
+         </form>
+       </aside>
+ 
+-      <main className="overflow-auto p-8">{children}</main>
++      <div className="flex min-h-screen flex-col">
++        {/* Barre supérieure : bouton retour présent sur chaque page du dashboard */}
++        <header className="sticky top-0 z-40 flex items-center justify-between border-b border-[var(--border-soft)] bg-[var(--bg-2)]/90 px-6 py-3 backdrop-blur-md">
++          <Link
++            href="/"
++            className="inline-flex items-center gap-2 rounded-lg border border-[var(--border-soft)] bg-[var(--surface)] px-3.5 py-2 text-sm font-semibold text-[var(--muted)] transition hover:border-[var(--gold)] hover:text-[var(--gold)]"
++          >
++            <ArrowLeft className="h-4 w-4" />
++            Retour au site
++          </Link>
++
++          <span className="text-sm text-[var(--faint)]">
++            Connecté en tant que{" "}
++            <span className="font-semibold text-[var(--muted)]">
++              {session.prenom}
++            </span>
++          </span>
++        </header>
++
++        <main className="flex-1 overflow-auto p-8">{children}</main>
++      </div>
+     </div>
+   );
+-}
+\ No newline at end of file
++}
+diff --git a/src/app/dashboard/page.tsx b/src/app/dashboard/page.tsx
+index 26a93b5..bef046a 100644
+--- a/src/app/dashboard/page.tsx
++++ b/src/app/dashboard/page.tsx
+@@ -1,17 +1,18 @@
+ // src/app/dashboard/page.tsx
+ import { prisma } from "@/lib/prisma";
+ import { getSession } from "@/lib/auth";
+-import { Inbox, Mail, Package } from "lucide-react";
++import { Inbox, Mail, Package, ClipboardList } from "lucide-react";
+ 
+ export const dynamic = "force-dynamic"; // toujours des données fraîches
+ 
+ export default async function DashboardPage() {
+   const session = await getSession();
+ 
+-  const [demandes, nbMessages, nbProduits] = await Promise.all([
++  const [demandes, nbMessages, nbProduits, nbCommandes] = await Promise.all([
+     prisma.demande.findMany({ orderBy: { createdAt: "desc" }, take: 20 }),
+     prisma.messageContact.count({ where: { traite: false } }),
+     prisma.produit.count({ where: { actif: true } }),
++    prisma.commande.count({ where: { statut: "NOUVELLE" } }),
+   ]);
+ 
+   const nbNouvelles = demandes.filter((d) => d.statut === "NOUVELLE").length;
+@@ -39,8 +40,9 @@ export default async function DashboardPage() {
+       </p>
+ 
+       {/* Stats */}
+-      <div className="mb-8 grid gap-4 sm:grid-cols-3">
++      <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+         <Stat icon={Inbox} label="Demandes à traiter" value={nbNouvelles} />
++        <Stat icon={ClipboardList} label="Commandes nouvelles" value={nbCommandes} />
+         <Stat icon={Mail} label="Messages non lus" value={nbMessages} />
+         <Stat icon={Package} label="Produits en ligne" value={nbProduits} />
+       </div>
+diff --git a/src/components/CartButton.tsx b/src/components/CartButton.tsx
+new file mode 100644
+index 0000000..4a301f1
+--- /dev/null
++++ b/src/components/CartButton.tsx
+@@ -0,0 +1,23 @@
++"use client";
++
++import { ShoppingBag } from "lucide-react";
++import { useCart } from "@/lib/cart";
++
++export default function CartButton() {
++  const { nbArticles, ouvrir } = useCart();
++
++  return (
++    <button
++      onClick={ouvrir}
++      aria-label="Panier"
++      className="relative grid h-10 w-10 place-items-center rounded-lg border border-[var(--border-soft)] bg-[var(--surface)] text-[var(--muted)] transition hover:border-[var(--gold)] hover:text-[var(--gold)]"
++    >
++      <ShoppingBag className="h-5 w-5" />
++      {nbArticles > 0 && (
++        <span className="absolute -right-1.5 -top-1.5 grid h-5 min-w-[20px] place-items-center rounded-full bg-[var(--gold)] px-1 text-[10px] font-bold text-[#3A1631]">
++          {nbArticles}
++        </span>
++      )}
++    </button>
++  );
++}
+diff --git a/src/components/CartDrawer.tsx b/src/components/CartDrawer.tsx
+new file mode 100644
+index 0000000..019b2ba
+--- /dev/null
++++ b/src/components/CartDrawer.tsx
+@@ -0,0 +1,158 @@
++"use client";
++
++import Image from "next/image";
++import Link from "next/link";
++import { X, Plus, Minus, Trash2, ShoppingBag } from "lucide-react";
++import { useCart } from "@/lib/cart";
++
++export default function CartDrawer() {
++  const {
++    items,
++    ouvert,
++    fermer,
++    changerQuantite,
++    retirer,
++    total,
++    nbArticles,
++  } = useCart();
++
++  return (
++    <>
++      {/* Overlay */}
++      <div
++        onClick={fermer}
++        className={`fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${
++          ouvert ? "opacity-100" : "pointer-events-none opacity-0"
++        }`}
++      />
++
++      {/* Panneau */}
++      <aside
++        className={`fixed right-0 top-0 z-[70] flex h-full w-full max-w-md flex-col border-l border-[var(--border-soft)] bg-[var(--bg-2)] shadow-2xl transition-transform duration-300 ${
++          ouvert ? "translate-x-0" : "translate-x-full"
++        }`}
++        aria-hidden={!ouvert}
++      >
++        {/* En-tête */}
++        <div className="flex items-center justify-between border-b border-[var(--border-soft)] px-5 py-4">
++          <div className="flex items-center gap-2">
++            <ShoppingBag className="h-5 w-5 text-[var(--gold)]" />
++            <h2 className="font-display text-xl font-semibold">
++              Mon panier
++              {nbArticles > 0 && (
++                <span className="ml-2 text-sm text-[var(--muted)]">
++                  ({nbArticles})
++                </span>
++              )}
++            </h2>
++          </div>
++          <button
++            onClick={fermer}
++            aria-label="Fermer le panier"
++            className="grid h-9 w-9 place-items-center rounded-lg border border-[var(--border-soft)] text-[var(--muted)] transition hover:border-[var(--gold)] hover:text-[var(--gold)]"
++          >
++            <X className="h-5 w-5" />
++          </button>
++        </div>
++
++        {/* Contenu */}
++        {items.length === 0 ? (
++          <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
++            <ShoppingBag className="h-12 w-12 text-[var(--faint)]" />
++            <p className="text-[var(--muted)]">Votre panier est vide.</p>
++            <Link
++              href="/boutique"
++              onClick={fermer}
++              className="mt-2 rounded-lg border border-[var(--gold)] px-4 py-2 text-sm font-semibold text-[var(--gold)] transition hover:bg-[var(--gold)] hover:text-[#3A1631]"
++            >
++              Découvrir la boutique
++            </Link>
++          </div>
++        ) : (
++          <>
++            <div className="flex-1 space-y-3 overflow-y-auto px-5 py-4">
++              {items.map((i) => (
++                <div
++                  key={i.id}
++                  className="flex gap-3 rounded-xl border border-[var(--border-soft)] bg-[var(--surface)] p-3"
++                >
++                  <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-[var(--bg)]">
++                    {i.image ? (
++                      <Image
++                        src={i.image}
++                        alt={i.nom}
++                        fill
++                        sizes="80px"
++                        className="object-cover"
++                      />
++                    ) : (
++                      <div className="grid h-full w-full place-items-center text-2xl">
++                        🛍️
++                      </div>
++                    )}
++                  </div>
++
++                  <div className="flex flex-1 flex-col">
++                    <h3 className="line-clamp-2 text-sm font-semibold">
++                      {i.nom}
++                    </h3>
++                    <div className="mt-0.5 text-sm font-bold text-[var(--gold)]">
++                      {i.prix.toLocaleString("fr-FR")} FCFA
++                    </div>
++
++                    <div className="mt-auto flex items-center justify-between">
++                      <div className="flex items-center gap-1 rounded-lg border border-[var(--border-soft)]">
++                        <button
++                          onClick={() => changerQuantite(i.id, i.quantite - 1)}
++                          className="grid h-7 w-7 place-items-center text-[var(--muted)] transition hover:text-[var(--gold)]"
++                          aria-label="Diminuer la quantité"
++                        >
++                          <Minus className="h-3.5 w-3.5" />
++                        </button>
++                        <span className="w-6 text-center text-sm font-semibold">
++                          {i.quantite}
++                        </span>
++                        <button
++                          onClick={() => changerQuantite(i.id, i.quantite + 1)}
++                          className="grid h-7 w-7 place-items-center text-[var(--muted)] transition hover:text-[var(--gold)]"
++                          aria-label="Augmenter la quantité"
++                        >
++                          <Plus className="h-3.5 w-3.5" />
++                        </button>
++                      </div>
++
++                      <button
++                        onClick={() => retirer(i.id)}
++                        className="grid h-7 w-7 place-items-center rounded-lg text-red-400 transition hover:bg-red-500/10"
++                        aria-label="Retirer l'article"
++                      >
++                        <Trash2 className="h-4 w-4" />
++                      </button>
++                    </div>
++                  </div>
++                </div>
++              ))}
++            </div>
++
++            {/* Pied */}
++            <div className="border-t border-[var(--border-soft)] px-5 py-4">
++              <div className="mb-4 flex items-center justify-between">
++                <span className="text-sm text-[var(--muted)]">Total</span>
++                <span className="font-display text-2xl font-semibold text-[var(--gold)]">
++                  {total.toLocaleString("fr-FR")} FCFA
++                </span>
++              </div>
++              <Link
++                href="/commande"
++                onClick={fermer}
++                className="flex w-full items-center justify-center rounded-lg bg-[linear-gradient(135deg,var(--gold),var(--gold-deep))] py-3 text-sm font-bold text-[#3A1631] shadow-[0_6px_18px_rgba(201,162,39,0.25)] transition-transform hover:-translate-y-0.5"
++              >
++                Passer la commande
++              </Link>
++            </div>
++          </>
++        )}
++      </aside>
++    </>
++  );
++}
+diff --git a/src/components/Header.tsx b/src/components/Header.tsx
+index b26ab24..254b0b0 100644
+--- a/src/components/Header.tsx
++++ b/src/components/Header.tsx
+@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
+ import { useEffect, useState } from "react";
+ import { Menu, X } from "lucide-react";
+ import ThemeToggle from "@/components/ThemeToggle";
++import CartButton from "@/components/CartButton";
+ 
+ const navItems = [
+   { href: "/", label: "Accueil" },
+@@ -70,6 +71,8 @@ export default function Header() {
+         <div className="flex items-center gap-2 sm:gap-3">
+           <ThemeToggle />
+ 
++          <CartButton />
++
+           <Link
+             href="/devis"
+             className="hidden rounded-lg bg-[linear-gradient(135deg,var(--gold),var(--gold-deep))] px-4 py-2 text-sm font-bold text-[#3A1631] shadow-[0_6px_18px_rgba(201,162,39,0.25)] transition-transform hover:-translate-y-0.5 lg:inline-block"
+diff --git a/src/components/ProductGrid.tsx b/src/components/ProductGrid.tsx
+index 6b0a985..a745aa1 100644
+--- a/src/components/ProductGrid.tsx
++++ b/src/components/ProductGrid.tsx
+@@ -2,7 +2,8 @@
+ 
+ import Image from "next/image";
+ import { useState } from "react";
+-import { Heart, MessageCircle } from "lucide-react";
++import { Heart, MessageCircle, ShoppingBag } from "lucide-react";
++import { useCart } from "@/lib/cart";
+ 
+ // Numéro WhatsApp de S.E
+ const WHATSAPP = "23674017878";
+@@ -42,6 +43,7 @@ export default function ProductGrid({
+   filtres: string[];
+ }) {
+   const [actif, setActif] = useState("Tout");
++  const { ajouter } = useCart();
+ 
+   const liste =
+     actif === "Tout"
+@@ -129,15 +131,32 @@ export default function ProductGrid({
+                 </span>
+               </div>
+ 
+-              <button
+-                onClick={() => commanderWhatsApp(p)}
+-                className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg border border-[#25D366]/40 bg-[#25D366]/10 py-2.5 text-[11px] sm:text-xs font-bold uppercase tracking-wide text-[#25D366] transition-all hover:bg-[#25D366] hover:text-white"
+-              >
+-                <MessageCircle className="h-4 w-4 flex-shrink-0" />
+-                <span className="truncate">
+-                  Commander sur WhatsApp
+-                </span>
+-              </button>
++              <div className="mt-4 flex gap-2">
++                <button
++                  onClick={() =>
++                    ajouter({
++                      id: p.id,
++                      nom: p.nom,
++                      prix: p.prix,
++                      image: p.image,
++                      cat: p.cat,
++                    })
++                  }
++                  className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-[linear-gradient(135deg,var(--gold),var(--gold-deep))] py-2.5 text-[11px] sm:text-xs font-bold uppercase tracking-wide text-[#3A1631] transition-transform hover:-translate-y-0.5"
++                >
++                  <ShoppingBag className="h-4 w-4 flex-shrink-0" />
++                  <span className="truncate">Ajouter</span>
++                </button>
++
++                <button
++                  onClick={() => commanderWhatsApp(p)}
++                  aria-label="Commander sur WhatsApp"
++                  title="Commander sur WhatsApp"
++                  className="grid w-10 flex-shrink-0 place-items-center rounded-lg border border-[#25D366]/40 bg-[#25D366]/10 text-[#25D366] transition-all hover:bg-[#25D366] hover:text-white"
++                >
++                  <MessageCircle className="h-4 w-4" />
++                </button>
++              </div>
+             </div>
+           </div>
+         ))}
+diff --git a/src/lib/cart.tsx b/src/lib/cart.tsx
+new file mode 100644
+index 0000000..13de1cd
+--- /dev/null
++++ b/src/lib/cart.tsx
+@@ -0,0 +1,141 @@
++"use client";
++
++import {
++  createContext,
++  useCallback,
++  useContext,
++  useEffect,
++  useMemo,
++  useState,
++  type ReactNode,
++} from "react";
++
++export type CartItem = {
++  id: string;
++  nom: string;
++  prix: number;
++  image?: string;
++  cat?: string;
++  quantite: number;
++};
++
++type CartContextValue = {
++  items: CartItem[];
++  ajouter: (produit: Omit<CartItem, "quantite">, quantite?: number) => void;
++  retirer: (id: string) => void;
++  changerQuantite: (id: string, quantite: number) => void;
++  vider: () => void;
++  ouvrir: () => void;
++  fermer: () => void;
++  ouvert: boolean;
++  nbArticles: number;
++  total: number;
++};
++
++const CartContext = createContext<CartContextValue | null>(null);
++const STORAGE_KEY = "se-panier";
++
++export function CartProvider({ children }: { children: ReactNode }) {
++  const [items, setItems] = useState<CartItem[]>([]);
++  const [ouvert, setOuvert] = useState(false);
++  const [charge, setCharge] = useState(false);
++
++  // Chargement depuis localStorage (une seule fois, côté client)
++  useEffect(() => {
++    try {
++      const brut = localStorage.getItem(STORAGE_KEY);
++      if (brut) setItems(JSON.parse(brut));
++    } catch {
++      /* localStorage indisponible : on ignore */
++    }
++    setCharge(true);
++  }, []);
++
++  // Persistance à chaque changement
++  useEffect(() => {
++    if (!charge) return;
++    try {
++      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
++    } catch {
++      /* ignore */
++    }
++  }, [items, charge]);
++
++  const ajouter = useCallback(
++    (produit: Omit<CartItem, "quantite">, quantite = 1) => {
++      setItems((prev) => {
++        const existant = prev.find((i) => i.id === produit.id);
++        if (existant) {
++          return prev.map((i) =>
++            i.id === produit.id
++              ? { ...i, quantite: i.quantite + quantite }
++              : i
++          );
++        }
++        return [...prev, { ...produit, quantite }];
++      });
++      setOuvert(true);
++    },
++    []
++  );
++
++  const retirer = useCallback((id: string) => {
++    setItems((prev) => prev.filter((i) => i.id !== id));
++  }, []);
++
++  const changerQuantite = useCallback((id: string, quantite: number) => {
++    setItems((prev) =>
++      quantite <= 0
++        ? prev.filter((i) => i.id !== id)
++        : prev.map((i) => (i.id === id ? { ...i, quantite } : i))
++    );
++  }, []);
++
++  const vider = useCallback(() => setItems([]), []);
++  const ouvrir = useCallback(() => setOuvert(true), []);
++  const fermer = useCallback(() => setOuvert(false), []);
++
++  const nbArticles = useMemo(
++    () => items.reduce((n, i) => n + i.quantite, 0),
++    [items]
++  );
++  const total = useMemo(
++    () => items.reduce((s, i) => s + i.prix * i.quantite, 0),
++    [items]
++  );
++
++  const value = useMemo<CartContextValue>(
++    () => ({
++      items,
++      ajouter,
++      retirer,
++      changerQuantite,
++      vider,
++      ouvrir,
++      fermer,
++      ouvert,
++      nbArticles,
++      total,
++    }),
++    [
++      items,
++      ajouter,
++      retirer,
++      changerQuantite,
++      vider,
++      ouvrir,
++      fermer,
++      ouvert,
++      nbArticles,
++      total,
++    ]
++  );
++
++  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
++}
++
++export function useCart() {
++  const ctx = useContext(CartContext);
++  if (!ctx) throw new Error("useCart doit être utilisé dans <CartProvider>");
++  return ctx;
++}

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
+import CartButton from "@/components/CartButton";
 
 const navItems = [
   { href: "/", label: "Accueil" },
@@ -69,6 +70,8 @@ export default function Header() {
         {/* Actions */}
         <div className="flex items-center gap-2 sm:gap-3">
           <ThemeToggle />
+
+          <CartButton />
 
           <Link
             href="/devis"

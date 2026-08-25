@@ -1,17 +1,18 @@
 // src/app/dashboard/page.tsx
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
-import { Inbox, Mail, Package } from "lucide-react";
+import { Inbox, Mail, Package, ClipboardList } from "lucide-react";
 
 export const dynamic = "force-dynamic"; // toujours des données fraîches
 
 export default async function DashboardPage() {
   const session = await getSession();
 
-  const [demandes, nbMessages, nbProduits] = await Promise.all([
+  const [demandes, nbMessages, nbProduits, nbCommandes] = await Promise.all([
     prisma.demande.findMany({ orderBy: { createdAt: "desc" }, take: 20 }),
     prisma.messageContact.count({ where: { traite: false } }),
     prisma.produit.count({ where: { actif: true } }),
+    prisma.commande.count({ where: { statut: "NOUVELLE" } }),
   ]);
 
   const nbNouvelles = demandes.filter((d) => d.statut === "NOUVELLE").length;
@@ -39,8 +40,9 @@ export default async function DashboardPage() {
       </p>
 
       {/* Stats */}
-      <div className="mb-8 grid gap-4 sm:grid-cols-3">
+      <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat icon={Inbox} label="Demandes à traiter" value={nbNouvelles} />
+        <Stat icon={ClipboardList} label="Commandes nouvelles" value={nbCommandes} />
         <Stat icon={Mail} label="Messages non lus" value={nbMessages} />
         <Stat icon={Package} label="Produits en ligne" value={nbProduits} />
       </div>
@@ -55,7 +57,8 @@ export default async function DashboardPage() {
             Aucune demande pour le moment.
           </p>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[560px] text-sm">
             <thead>
               <tr className="bg-[var(--bg-2)] text-left text-[11px] uppercase tracking-wider text-[var(--faint)]">
                 <th className="px-6 py-3">Contact</th>
@@ -73,12 +76,12 @@ export default async function DashboardPage() {
                     <div className="text-xs text-[var(--muted)]">{d.telephone}</div>
                   </td>
                   <td className="px-6 py-4 text-[var(--muted)]">{d.typeEvenement}</td>
-                  <td className="px-6 py-4 text-[var(--muted)]">
+                  <td className="px-6 py-4 text-[var(--muted)] whitespace-nowrap">
                     {d.dateEvenement
                       ? new Date(d.dateEvenement).toLocaleDateString("fr-FR")
                       : "—"}
                   </td>
-                  <td className="px-6 py-4 text-[var(--muted)]">
+                  <td className="px-6 py-4 text-[var(--muted)] whitespace-nowrap">
                     {new Date(d.createdAt).toLocaleDateString("fr-FR")}
                   </td>
                   <td className="px-6 py-4">
@@ -90,6 +93,7 @@ export default async function DashboardPage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
     </>

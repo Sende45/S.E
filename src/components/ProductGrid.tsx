@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { Heart, MessageCircle } from "lucide-react";
+import { Heart, MessageCircle, ShoppingBag } from "lucide-react";
+import { useCart } from "@/lib/cart";
 
 // Numéro WhatsApp de S.E
 const WHATSAPP = "23674017878";
@@ -42,6 +43,7 @@ export default function ProductGrid({
   filtres: string[];
 }) {
   const [actif, setActif] = useState("Tout");
+  const { ajouter } = useCart();
 
   const liste =
     actif === "Tout"
@@ -129,15 +131,32 @@ export default function ProductGrid({
                 </span>
               </div>
 
-              <button
-                onClick={() => commanderWhatsApp(p)}
-                className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg border border-[#25D366]/40 bg-[#25D366]/10 py-2.5 text-[11px] sm:text-xs font-bold uppercase tracking-wide text-[#25D366] transition-all hover:bg-[#25D366] hover:text-white"
-              >
-                <MessageCircle className="h-4 w-4 flex-shrink-0" />
-                <span className="truncate">
-                  Commander sur WhatsApp
-                </span>
-              </button>
+              <div className="mt-4 flex gap-2">
+                <button
+                  onClick={() =>
+                    ajouter({
+                      id: p.id,
+                      nom: p.nom,
+                      prix: p.prix,
+                      image: p.image,
+                      cat: p.cat,
+                    })
+                  }
+                  className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-[linear-gradient(135deg,var(--gold),var(--gold-deep))] py-2.5 text-[11px] sm:text-xs font-bold uppercase tracking-wide text-[#3A1631] transition-transform hover:-translate-y-0.5"
+                >
+                  <ShoppingBag className="h-4 w-4 flex-shrink-0" />
+                  <span className="truncate">Ajouter</span>
+                </button>
+
+                <button
+                  onClick={() => commanderWhatsApp(p)}
+                  aria-label="Commander sur WhatsApp"
+                  title="Commander sur WhatsApp"
+                  className="grid w-10 flex-shrink-0 place-items-center rounded-lg border border-[#25D366]/40 bg-[#25D366]/10 text-[#25D366] transition-all hover:bg-[#25D366] hover:text-white"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                </button>
+              </div>
             </div>
           </div>
         ))}

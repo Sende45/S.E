@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
+import BackButton from "@/components/BackButton";
 import {
   UtensilsCrossed,
   ChefHat,
@@ -43,6 +44,13 @@ export default async function TraiteurPage() {
         <div className="pointer-events-none absolute right-[-12%] top-[-20%] h-[420px] w-[420px] rounded-full bg-[radial-gradient(circle,var(--gold),transparent_70%)] opacity-10" />
 
         <div className="mx-auto max-w-6xl px-6 pt-20 pb-12">
+          {/* Bouton retour */}
+          <BackButton
+            fallbackHref="/"
+            label="Retour à l'accueil"
+            className="mb-6"
+          />
+
           <span className="mb-4 inline-flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.3em] text-[var(--gold)]">
             <span className="inline-block h-1.5 w-1.5 rotate-45 bg-[var(--gold)]" />
             Pôle gastronomie
