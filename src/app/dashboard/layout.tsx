@@ -10,9 +10,10 @@ import {
   Image as ImageIcon,
   ShoppingBag,
   ClipboardList,
+  KeyRound,
   LogOut,
 } from "lucide-react";
-import DashboardBackButton from "@/components/BackButton";
+import BackButton from "@/components/BackButton";
 
 export default async function DashboardLayout({
   children,
@@ -30,6 +31,7 @@ export default async function DashboardLayout({
     { href: "/dashboard/realisations", label: "Réalisations", icon: ImageIcon },
     { href: "/dashboard/planning", label: "Planning", icon: Calendar },
     { href: "/dashboard/personnel", label: "Personnel", icon: Users },
+    { href: "/dashboard/compte", label: "Mon compte", icon: KeyRound },
   ];
 
   return (
@@ -72,7 +74,7 @@ export default async function DashboardLayout({
       <div className="flex min-h-screen flex-col">
         {/* Barre supérieure : bouton retour, présent sur chaque page */}
         <header className="sticky top-0 z-40 flex items-center justify-between gap-3 border-b border-[var(--border-soft)] bg-[var(--bg-2)]/90 px-4 py-3 backdrop-blur-md sm:px-6">
-          <DashboardBackButton />
+          <BackButton fallbackHref="/dashboard" label="Retour" />
 
           <span className="truncate text-xs text-[var(--faint)] sm:text-sm">
             <span className="hidden sm:inline">Connecté en tant que </span>
