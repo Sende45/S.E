@@ -92,3 +92,13 @@ html.light {
   border-color: var(--gold);
   box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.15);
 }
+/* Empêche le fond blanc de l'auto-remplissage Chrome/Safari
+   et conserve la couleur du thème sur les champs .se-input */
+.se-input:-webkit-autofill,
+.se-input:-webkit-autofill:hover,
+.se-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--text);
+  -webkit-box-shadow: 0 0 0 1000px var(--bg) inset;
+  caret-color: var(--text);
+  transition: background-color 9999s ease-in-out 0s;
+}
