@@ -1,9 +1,9 @@
 import type { MetadataRoute } from "next";
 
 // Domaine du site. Défini via la variable d'environnement NEXT_PUBLIC_SITE_URL
-// sur Vercel (ex. https://www.se-holding.com). Valeur de repli sinon.
+// sur Vercel (ex. https://s-e-chi.vercel.app). Valeur de repli sinon.
 const BASE_URL = (
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.se-holding.com"
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://s-e-chi.vercel.app"
 ).replace(/\/$/, "");
 
 type Entree = {
