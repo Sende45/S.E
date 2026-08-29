@@ -3,8 +3,10 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 // =====================
-// Changer son propre mot de passe (utilisateur connecté)
+// Changer son email (= identifiant de connexion)
 // =====================
 export async function PATCH(req: NextRequest) {
   const session = await getSession();
@@ -13,17 +15,19 @@ export async function PATCH(req: NextRequest) {
   }
 
   try {
-    const { ancienMotDePasse, nouveauMotDePasse } = await req.json();
+    const { motDePasse, nouveauEmail } = await req.json();
 
-    if (!ancienMotDePasse || !nouveauMotDePasse) {
+    if (!motDePasse || !nouveauEmail) {
       return NextResponse.json(
-        { message: "Tous les champs sont requis." },
+        { message: "Le mot de passe et le nouvel email sont requis." },
         { status: 400 }
       );
     }
-    if (nouveauMotDePasse.length < 8) {
+
+    const email = String(nouveauEmail).trim().toLowerCase();
+    if (!EMAIL_REGEX.test(email)) {
       return NextResponse.json(
-        { message: "Le nouveau mot de passe doit faire au moins 8 caractères." },
+        { message: "Format d'email invalide." },
         { status: 400 }
       );
     }
@@ -33,23 +37,29 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ message: "Compte introuvable." }, { status: 404 });
     }
 
-    const ok = await bcrypt.compare(ancienMotDePasse, user.motDePasse);
+    // Confirmation par mot de passe (sécurité)
+    const ok = await bcrypt.compare(motDePasse, user.motDePasse);
     if (!ok) {
       return NextResponse.json(
-        { message: "Mot de passe actuel incorrect." },
+        { message: "Mot de passe incorrect." },
         { status: 400 }
       );
     }
 
-    const hash = await bcrypt.hash(nouveauMotDePasse, 12);
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { motDePasse: hash },
-    });
+    // Email déjà utilisé par un autre compte ?
+    const dejaPris = await prisma.user.findUnique({ where: { email } });
+    if (dejaPris && dejaPris.id !== user.id) {
+      return NextResponse.json(
+        { message: "Cet email est déjà utilisé." },
+        { status: 409 }
+      );
+    }
 
-    return NextResponse.json({ ok: true });
+    await prisma.user.update({ where: { id: user.id }, data: { email } });
+
+    return NextResponse.json({ ok: true, email });
   } catch (error) {
-    console.error("Erreur changement mot de passe:", error);
+    console.error("Erreur changement email:", error);
     return NextResponse.json({ message: "Erreur serveur" }, { status: 500 });
   }
 }

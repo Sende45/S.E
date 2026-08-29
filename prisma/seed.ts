@@ -5,12 +5,15 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 async function seedAdmin() {
-  const email = "yohannesende@gmail.com"; // à personnaliser
-  const existant = await prisma.user.findUnique({ where: { email } });
+  // On ne crée un admin que si AUCUN admin n'existe encore.
+  // (Ainsi, si tu changes l'email admin plus tard, le seed ne recrée
+  //  pas un doublon avec l'ancien email au prochain déploiement.)
+  const existant = await prisma.user.findFirst({ where: { role: "ADMIN" } });
   if (existant) {
     console.log("Admin déjà présent, ignoré.");
     return;
   }
+  const email = "yohannesende@gmail.com"; // email de départ (modifiable ensuite dans « Mon compte »)
   const motDePasse = "SeHolding2026!"; // à changer après la 1re connexion
   const hash = await bcrypt.hash(motDePasse, 12);
   await prisma.user.create({

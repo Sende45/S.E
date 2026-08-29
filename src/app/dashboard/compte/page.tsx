@@ -1,32 +1,85 @@
 "use client";
 
-import { useState } from "react";
-import { Eye, EyeOff, Loader2, CheckCircle2, KeyRound } from "lucide-react";
+import { useEffect, useState } from "react";
+import {
+  Eye,
+  EyeOff,
+  Loader2,
+  CheckCircle2,
+  KeyRound,
+  AtSign,
+} from "lucide-react";
 
 export default function ComptePage() {
+  // ----- Email -----
+  const [email, setEmail] = useState("");
+  const [emailMdp, setEmailMdp] = useState("");
+  const [emailEnvoi, setEmailEnvoi] = useState(false);
+  const [emailErreur, setEmailErreur] = useState("");
+  const [emailSucces, setEmailSucces] = useState(false);
+  const [chargementInfos, setChargementInfos] = useState(true);
+
+  // ----- Mot de passe -----
   const [ancien, setAncien] = useState("");
   const [nouveau, setNouveau] = useState("");
   const [confirme, setConfirme] = useState("");
   const [voir, setVoir] = useState(false);
-  const [envoi, setEnvoi] = useState(false);
-  const [erreur, setErreur] = useState("");
-  const [succes, setSucces] = useState(false);
+  const [mdpEnvoi, setMdpEnvoi] = useState(false);
+  const [mdpErreur, setMdpErreur] = useState("");
+  const [mdpSucces, setMdpSucces] = useState(false);
 
-  const soumettre = async (e: React.FormEvent) => {
+  // Récupère l'email actuel
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/compte");
+        if (res.ok) {
+          const data = await res.json();
+          setEmail(data.email ?? "");
+        }
+      } finally {
+        setChargementInfos(false);
+      }
+    })();
+  }, []);
+
+  const changerEmail = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErreur("");
-    setSucces(false);
+    setEmailErreur("");
+    setEmailSucces(false);
+    setEmailEnvoi(true);
+    try {
+      const res = await fetch("/api/compte/email", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nouveauEmail: email, motDePasse: emailMdp }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || "Échec de la mise à jour.");
+      setEmailSucces(true);
+      setEmailMdp("");
+    } catch (err) {
+      setEmailErreur(err instanceof Error ? err.message : "Une erreur est survenue.");
+    } finally {
+      setEmailEnvoi(false);
+    }
+  };
+
+  const changerMdp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMdpErreur("");
+    setMdpSucces(false);
 
     if (nouveau.length < 8) {
-      setErreur("Le nouveau mot de passe doit faire au moins 8 caractères.");
+      setMdpErreur("Le nouveau mot de passe doit faire au moins 8 caractères.");
       return;
     }
     if (nouveau !== confirme) {
-      setErreur("Les deux nouveaux mots de passe ne correspondent pas.");
+      setMdpErreur("Les deux nouveaux mots de passe ne correspondent pas.");
       return;
     }
 
-    setEnvoi(true);
+    setMdpEnvoi(true);
     try {
       const res = await fetch("/api/compte/motdepasse", {
         method: "PATCH",
@@ -38,46 +91,112 @@ export default function ComptePage() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.message || "Échec de la mise à jour.");
-
-      setSucces(true);
+      setMdpSucces(true);
       setAncien("");
       setNouveau("");
       setConfirme("");
     } catch (err) {
-      setErreur(err instanceof Error ? err.message : "Une erreur est survenue.");
+      setMdpErreur(err instanceof Error ? err.message : "Une erreur est survenue.");
     } finally {
-      setEnvoi(false);
+      setMdpEnvoi(false);
     }
   };
 
   return (
-    <div className="max-w-lg">
-      <h1 className="font-display text-3xl font-semibold">Mon compte</h1>
-      <p className="mb-8 text-sm text-[var(--muted)]">
-        Modifiez le mot de passe de connexion à l&apos;espace de gestion.
-      </p>
+    <div className="max-w-lg space-y-6">
+      <div>
+        <h1 className="font-display text-3xl font-semibold">Mon compte</h1>
+        <p className="text-sm text-[var(--muted)]">
+          Gérez votre identifiant et votre mot de passe de connexion.
+        </p>
+      </div>
 
+      {/* ===== Email ===== */}
       <form
-        onSubmit={soumettre}
+        onSubmit={changerEmail}
+        className="rounded-2xl border border-[var(--border-soft)] bg-[var(--surface)] p-6"
+      >
+        <div className="mb-5 flex items-center gap-2 text-[var(--gold)]">
+          <AtSign className="h-5 w-5" />
+          <h2 className="font-display text-xl font-semibold">
+            Email de connexion
+          </h2>
+        </div>
+
+        {emailSucces && (
+          <div className="mb-5 flex items-center gap-2 rounded-lg border border-[#5fbf8f]/30 bg-[#5fbf8f]/10 p-3 text-sm text-[#5fbf8f]">
+            <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+            Email mis à jour.
+          </div>
+        )}
+        {emailErreur && (
+          <div className="mb-5 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
+            {emailErreur}
+          </div>
+        )}
+
+        <label className="mb-2 block text-sm font-semibold text-[var(--muted)]">
+          Nouvel email
+        </label>
+        <input
+          type="email"
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="se-input mb-4"
+          placeholder={chargementInfos ? "Chargement..." : "vous@exemple.com"}
+          disabled={chargementInfos}
+          required
+        />
+
+        <label className="mb-2 block text-sm font-semibold text-[var(--muted)]">
+          Mot de passe actuel (pour confirmer)
+        </label>
+        <input
+          type="password"
+          autoComplete="current-password"
+          value={emailMdp}
+          onChange={(e) => setEmailMdp(e.target.value)}
+          className="se-input mb-5"
+          placeholder="••••••••"
+          required
+        />
+
+        <button
+          type="submit"
+          disabled={emailEnvoi || chargementInfos}
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-[linear-gradient(135deg,var(--gold),var(--gold-deep))] py-3.5 text-sm font-bold text-[#3A1631] shadow-[0_6px_18px_rgba(201,162,39,0.25)] transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {emailEnvoi ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Mise à jour...
+            </>
+          ) : (
+            "Mettre à jour l'email"
+          )}
+        </button>
+      </form>
+
+      {/* ===== Mot de passe ===== */}
+      <form
+        onSubmit={changerMdp}
         className="rounded-2xl border border-[var(--border-soft)] bg-[var(--surface)] p-6"
       >
         <div className="mb-5 flex items-center gap-2 text-[var(--gold)]">
           <KeyRound className="h-5 w-5" />
-          <h2 className="font-display text-xl font-semibold">
-            Changer le mot de passe
-          </h2>
+          <h2 className="font-display text-xl font-semibold">Mot de passe</h2>
         </div>
 
-        {succes && (
+        {mdpSucces && (
           <div className="mb-5 flex items-center gap-2 rounded-lg border border-[#5fbf8f]/30 bg-[#5fbf8f]/10 p-3 text-sm text-[#5fbf8f]">
             <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
             Mot de passe mis à jour.
           </div>
         )}
-
-        {erreur && (
+        {mdpErreur && (
           <div className="mb-5 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
-            {erreur}
+            {mdpErreur}
           </div>
         )}
 
@@ -137,10 +256,10 @@ export default function ComptePage() {
 
         <button
           type="submit"
-          disabled={envoi}
+          disabled={mdpEnvoi}
           className="flex w-full items-center justify-center gap-2 rounded-lg bg-[linear-gradient(135deg,var(--gold),var(--gold-deep))] py-3.5 text-sm font-bold text-[#3A1631] shadow-[0_6px_18px_rgba(201,162,39,0.25)] transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {envoi ? (
+          {mdpEnvoi ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
               Mise à jour...
