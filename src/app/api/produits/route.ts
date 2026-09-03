@@ -5,7 +5,7 @@ import { getSession } from "@/lib/auth";
 export async function GET() {
   const produits = await prisma.produit.findMany({
     orderBy: {
-      createdAt: "desc",
+      nom: "asc",
     },
   });
 

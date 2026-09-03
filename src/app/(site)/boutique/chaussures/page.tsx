@@ -14,7 +14,7 @@ export default async function ChaussuresPage() {
       disponible: true,
     },
     orderBy: {
-      createdAt: "desc",
+      nom: "asc",
     },
   });
 

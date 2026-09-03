@@ -14,7 +14,7 @@ export default async function VetementsPage() {
       disponible: true,
     },
     orderBy: {
-      createdAt: "desc",
+      nom: "asc",
     },
   });
 

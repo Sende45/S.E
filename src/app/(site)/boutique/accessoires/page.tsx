@@ -14,7 +14,7 @@ export default async function AccessoiresPage() {
       disponible: true,
     },
     orderBy: {
-      createdAt: "desc",
+      nom: "asc",
     },
   });
 

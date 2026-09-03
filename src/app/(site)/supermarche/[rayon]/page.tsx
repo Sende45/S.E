@@ -54,7 +54,7 @@ export default async function RayonPage({
       actif: true,
       disponible: true,
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: { nom: "asc" },
   });
 
   const produits: Produit[] = data.map((p) => ({
