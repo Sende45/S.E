@@ -30,7 +30,9 @@ export async function PUT(req: NextRequest, { params }: Params) {
         id,
       },
       data: {
-        categorie: body.categorie,
+        univers: body.univers === "SUPERMARCHE" ? "SUPERMARCHE" : "MODE",
+        categorie: body.univers === "SUPERMARCHE" ? null : body.categorie,
+        rayon: body.univers === "SUPERMARCHE" ? body.rayon : null,
         sousCategorie: body.sousCategorie,
         nom: body.nom,
         description: body.description,

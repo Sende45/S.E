@@ -128,7 +128,11 @@ enum CategorieBoutique {
 model Produit {
   id              String @id @default(cuid())
 
-  categorie       CategorieBoutique
+  categorie       CategorieBoutique?
+
+  univers         Univers @default(MODE)
+
+  rayon           RayonSupermarche?
 
   sousCategorie   String?
 
@@ -324,6 +328,10 @@ model Commande {
   note            String?
   methodePaiement MethodePaiement @default(LIVRAISON)
   statut          StatutCommande  @default(NOUVELLE)
+  univers         Univers         @default(MODE)
+  modeLivraison   ModeLivraison   @default(RETRAIT)
+  fraisLivraison  Int             @default(0)
+  livreur         String?
   total           Int
   lignes          LigneCommande[]
   createdAt       DateTime        @default(now())
@@ -338,4 +346,24 @@ model LigneCommande {
   nomProduit   String
   prixUnitaire Int
   quantite     Int
+}
+
+////////////////////////////////////////////////////////////
+// SUPERMARCHÉ / ALIMENTATION
+////////////////////////////////////////////////////////////
+enum Univers {
+  MODE
+  SUPERMARCHE
+}
+
+enum RayonSupermarche {
+  ALIMENTATION
+  LIQUEURS
+  HYGIENE
+  MINISHOP
+}
+
+enum ModeLivraison {
+  RETRAIT
+  LIVRAISON
 }

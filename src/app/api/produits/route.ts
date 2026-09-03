@@ -27,7 +27,9 @@ export async function POST(req: NextRequest) {
 
     const produit = await prisma.produit.create({
       data: {
-        categorie: body.categorie,
+        univers: body.univers === "SUPERMARCHE" ? "SUPERMARCHE" : "MODE",
+        categorie: body.univers === "SUPERMARCHE" ? null : body.categorie,
+        rayon: body.univers === "SUPERMARCHE" ? body.rayon : null,
         sousCategorie: body.sousCategorie,
         nom: body.nom,
         description: body.description,

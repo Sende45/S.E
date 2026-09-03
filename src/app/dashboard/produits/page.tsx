@@ -16,7 +16,9 @@ import {
 
 type Produit = {
   id: string;
-  categorie: "VETEMENTS" | "CHAUSSURES" | "ACCESSOIRES";
+  univers: "MODE" | "SUPERMARCHE";
+  categorie: "VETEMENTS" | "CHAUSSURES" | "ACCESSOIRES" | null;
+  rayon: "ALIMENTATION" | "LIQUEURS" | "HYGIENE" | "MINISHOP" | null;
   sousCategorie: string | null;
   nom: string;
   description: string | null;
@@ -34,6 +36,13 @@ const CATEGORIES = [
   { id: "ACCESSOIRES", label: "Accessoires" },
 ] as const;
 
+const RAYONS_SUPERMARCHE = [
+  { id: "ALIMENTATION", label: "Alimentation" },
+  { id: "LIQUEURS", label: "Liqueurs" },
+  { id: "HYGIENE", label: "Hygiène & Beauté" },
+  { id: "MINISHOP", label: "Mini Shop" },
+] as const;
+
 // Suggestions de sous-catégories par rayon (affichées dans un <datalist>)
 const SOUS_CATEGORIES: Record<string, string[]> = {
   VETEMENTS: ["Femme", "Homme", "Cérémonie"],
@@ -42,7 +51,9 @@ const SOUS_CATEGORIES: Record<string, string[]> = {
 };
 
 type FormState = {
+  univers: "MODE" | "SUPERMARCHE";
   categorie: "VETEMENTS" | "CHAUSSURES" | "ACCESSOIRES";
+  rayon: "ALIMENTATION" | "LIQUEURS" | "HYGIENE" | "MINISHOP";
   sousCategorie: string;
   nom: string;
   description: string;
@@ -53,7 +64,9 @@ type FormState = {
 };
 
 const FORM_VIDE: FormState = {
+  univers: "MODE",
   categorie: "VETEMENTS",
+  rayon: "ALIMENTATION",
   sousCategorie: "",
   nom: "",
   description: "",
@@ -138,7 +151,9 @@ export default function ProduitsPage() {
   const commencerEdition = (p: Produit) => {
     setEditId(p.id);
     setForm({
-      categorie: p.categorie,
+      univers: p.univers,
+      categorie: p.categorie ?? "VETEMENTS",
+      rayon: p.rayon ?? "ALIMENTATION",
       sousCategorie: p.sousCategorie ?? "",
       nom: p.nom,
       description: p.description ?? "",
@@ -162,7 +177,9 @@ export default function ProduitsPage() {
     setErreur("");
     try {
       const payload = {
+        univers: form.univers,
         categorie: form.categorie,
+        rayon: form.rayon,
         sousCategorie: form.sousCategorie.trim() || null,
         nom: form.nom.trim(),
         description: form.description.trim() || null,
@@ -216,8 +233,10 @@ export default function ProduitsPage() {
     if (!res.ok) await charger();
   };
 
-  const labelCat = (id: string) =>
-    CATEGORIES.find((c) => c.id === id)?.label ?? id;
+  const labelProduit = (p: Produit) =>
+    p.univers === "SUPERMARCHE"
+      ? RAYONS_SUPERMARCHE.find((r) => r.id === p.rayon)?.label ?? "Supermarché"
+      : CATEGORIES.find((c) => c.id === p.categorie)?.label ?? "Boutique";
 
   return (
     <>
@@ -317,24 +336,56 @@ export default function ProduitsPage() {
             </div>
           </div>
 
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-[var(--muted)]">
+              Univers
+            </label>
+            <select
+              className="se-input"
+              value={form.univers}
+              onChange={(e) =>
+                maj("univers", e.target.value as FormState["univers"])
+              }
+            >
+              <option value="MODE">Boutique (Mode)</option>
+              <option value="SUPERMARCHE">Supermarché</option>
+            </select>
+          </div>
+
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <label className="mb-2 block text-sm font-semibold text-[var(--muted)]">
-                Rayon
+                {form.univers === "SUPERMARCHE" ? "Rayon" : "Catégorie"}
               </label>
-              <select
-                className="se-input"
-                value={form.categorie}
-                onChange={(e) =>
-                  maj("categorie", e.target.value as FormState["categorie"])
-                }
-              >
-                {CATEGORIES.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.label}
-                  </option>
-                ))}
-              </select>
+              {form.univers === "SUPERMARCHE" ? (
+                <select
+                  className="se-input"
+                  value={form.rayon}
+                  onChange={(e) =>
+                    maj("rayon", e.target.value as FormState["rayon"])
+                  }
+                >
+                  {RAYONS_SUPERMARCHE.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.label}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <select
+                  className="se-input"
+                  value={form.categorie}
+                  onChange={(e) =>
+                    maj("categorie", e.target.value as FormState["categorie"])
+                  }
+                >
+                  {CATEGORIES.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
             <div>
               <label className="mb-2 block text-sm font-semibold text-[var(--muted)]">
@@ -486,7 +537,7 @@ export default function ProduitsPage() {
 
               <div className="flex min-w-0 flex-1 flex-col">
                 <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--gold)]">
-                  {labelCat(p.categorie)}
+                  {labelProduit(p)}
                   {p.sousCategorie ? ` · ${p.sousCategorie}` : ""}
                 </div>
                 <h3 className="truncate font-display text-lg font-semibold">
