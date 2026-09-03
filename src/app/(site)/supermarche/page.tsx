@@ -50,7 +50,7 @@ export default function SupermarchePage() {
 
           <p className="mt-5 max-w-2xl text-base leading-relaxed text-[var(--muted)] sm:text-lg">
             Achetez en boutique ou commandez en ligne : nous vous livrons partout
-            dans le 8ᵉ arrondissement. Ouvert de 7h00 à 19h00.
+            dans le 8ᵉ arrondissement. Ouvert de 7h00 à 20h00.
           </p>
         </div>
       </section>
