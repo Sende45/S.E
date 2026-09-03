@@ -1,4 +1,6 @@
 import Link from "next/link";
+import Reveal from "@/components/motion/Reveal";
+import { StaggerGroup, StaggerItem } from "@/components/motion/Stagger";
 import {
   UtensilsCrossed,
   Sparkles,
@@ -104,7 +106,7 @@ export default function Home() {
 
       {/* UNIVERS */}
       <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:py-20">
-        <div className="mb-10 text-center lg:mb-14">
+        <Reveal className="mb-10 text-center lg:mb-14">
           <span className="text-[10px] font-semibold uppercase tracking-[0.3em] text-[var(--gold)] sm:text-xs">
             Nos univers
           </span>
@@ -112,17 +114,17 @@ export default function Home() {
           <h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl lg:text-5xl">
             Six métiers, une même exigence
           </h2>
-        </div>
+        </Reveal>
 
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <StaggerGroup className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {univers.map((u) => {
             const Icon = u.icon;
 
             return (
+              <StaggerItem key={u.href}>
               <Link
-                key={u.href}
                 href={u.href}
-                className="group relative overflow-hidden rounded-2xl border border-[var(--border-soft)] bg-[var(--surface)] p-6 transition-all duration-300 hover:-translate-y-1 hover:border-[var(--gold)] lg:p-8"
+                className="group relative block h-full overflow-hidden rounded-2xl border border-[var(--border-soft)] bg-[var(--surface)] p-6 transition-all duration-300 hover:-translate-y-1 hover:border-[var(--gold)] lg:p-8"
               >
                 <span className="absolute inset-x-0 top-0 h-0.5 bg-[linear-gradient(90deg,transparent,var(--gold),transparent)] opacity-0 transition-opacity group-hover:opacity-100" />
 
@@ -147,9 +149,10 @@ export default function Home() {
                   <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </span>
               </Link>
+              </StaggerItem>
             );
           })}
-        </div>
+        </StaggerGroup>
       </section>
 
       {/* CONTACT */}

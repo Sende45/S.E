@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ShoppingCart, Wine, SprayCan, Store, ArrowRight } from "lucide-react";
 import BackButton from "@/components/BackButton";
+import Reveal from "@/components/motion/Reveal";
+import { StaggerGroup, StaggerItem } from "@/components/motion/Stagger";
 
 const rayons = [
   {
@@ -44,27 +46,29 @@ export default function SupermarchePage() {
             Supermarché S.E · Bangui 8e
           </span>
 
-          <h1 className="max-w-[18ch] font-display text-4xl font-semibold leading-tight sm:text-5xl lg:text-6xl">
-            Vos courses, <em className="italic text-[var(--gold)]">livrées</em> chez vous
-          </h1>
+          <Reveal>
+            <h1 className="max-w-[18ch] font-display text-4xl font-semibold leading-tight sm:text-5xl lg:text-6xl">
+              Vos courses, <em className="italic text-[var(--gold)]">livrées</em> chez vous
+            </h1>
 
-          <p className="mt-5 max-w-2xl text-base leading-relaxed text-[var(--muted)] sm:text-lg">
-            Achetez en boutique ou commandez en ligne : nous vous livrons partout
-            dans le 8ᵉ arrondissement. Ouvert de 7h00 à 20h00.
-          </p>
+            <p className="mt-5 max-w-2xl text-base leading-relaxed text-[var(--muted)] sm:text-lg">
+              Achetez en boutique ou commandez en ligne : nous vous livrons partout
+              dans le 8ᵉ arrondissement. Ouvert de 7h00 à 19h00.
+            </p>
+          </Reveal>
         </div>
       </section>
 
       {/* RAYONS */}
       <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:py-16">
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <StaggerGroup className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {rayons.map((r) => {
             const Icon = r.icon;
             return (
+              <StaggerItem key={r.href}>
               <Link
-                key={r.href}
                 href={r.href}
-                className="group relative overflow-hidden rounded-2xl border border-[var(--border-soft)] bg-[var(--surface)] p-6 transition-all duration-300 hover:-translate-y-1 hover:border-[var(--gold)]"
+                className="group relative block h-full overflow-hidden rounded-2xl border border-[var(--border-soft)] bg-[var(--surface)] p-6 transition-all duration-300 hover:-translate-y-1 hover:border-[var(--gold)]"
               >
                 <span className="absolute inset-x-0 top-0 h-0.5 bg-[linear-gradient(90deg,transparent,var(--gold),transparent)] opacity-0 transition-opacity group-hover:opacity-100" />
 
@@ -82,9 +86,10 @@ export default function SupermarchePage() {
                   <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </span>
               </Link>
+              </StaggerItem>
             );
           })}
-        </div>
+        </StaggerGroup>
       </section>
     </>
   );
