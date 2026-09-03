@@ -28,6 +28,9 @@ const prestations = [
   },
 ];
 
+// Rafraîchit le contenu venant du backoffice sans redéploiement
+export const revalidate = 60;
+
 export default async function EvenementielPage() {
   const galerie = await prisma.realisation.findMany({
     where: {

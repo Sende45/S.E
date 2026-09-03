@@ -3,6 +3,9 @@ import ProductGrid, { Produit } from "@/components/ProductGrid";
 import { prisma } from "@/lib/prisma";
 import { CategorieBoutique } from "@prisma/client";
 
+// Rafraîchit le contenu venant du backoffice sans redéploiement
+export const revalidate = 60;
+
 export default async function ChaussuresPage() {
   const data = await prisma.produit.findMany({
     where: {
