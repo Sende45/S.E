@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import Reveal from "@/components/motion/Reveal";
 import { StaggerGroup, StaggerItem } from "@/components/motion/Stagger";
 import {
@@ -63,43 +64,60 @@ export default function Home() {
     <>
       {/* HERO */}
       <section className="relative overflow-hidden">
-        <div className="pointer-events-none absolute right-[-18%] top-[-22%] h-72 w-72 rounded-full bg-[radial-gradient(circle,var(--gold),transparent_70%)] opacity-10 sm:h-96 sm:w-96" />
+        <div className="pointer-events-none absolute right-[-10%] top-[-20%] h-72 w-72 rounded-full bg-[radial-gradient(circle,var(--gold),transparent_70%)] opacity-10 sm:h-96 sm:w-96" />
 
-        <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 md:py-24 lg:py-28">
-          <Reveal>
-            <span className="mb-5 inline-flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.25em] text-[var(--gold)] sm:text-xs sm:tracking-[0.3em]">
-              <span className="inline-block h-1.5 w-1.5 rotate-45 bg-[var(--gold)]" />
-              L'excellence S.E
-            </span>
+        <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-16 sm:px-6 md:py-20 lg:grid-cols-2 lg:gap-14 lg:py-24">
+          {/* Texte */}
+          <div>
+            <Reveal>
+              <span className="mb-5 inline-flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.25em] text-[var(--gold)] sm:text-xs sm:tracking-[0.3em]">
+                <span className="inline-block h-1.5 w-1.5 rotate-45 bg-[var(--gold)]" />
+                L'excellence S.E
+              </span>
 
-            <h1 className="max-w-[16ch] font-display text-4xl font-semibold leading-tight sm:text-5xl lg:text-7xl lg:leading-[1.03]">
-              Un service de{" "}
-              <em className="italic text-[var(--gold)]">qualité</em> et de saveurs
-            </h1>
+              <h1 className="max-w-[16ch] font-display text-4xl font-semibold leading-tight sm:text-5xl lg:text-6xl lg:leading-[1.05]">
+                Un service de{" "}
+                <em className="italic text-[var(--gold)]">qualité</em> et de saveurs
+              </h1>
 
-            <p className="mt-5 max-w-2xl text-base leading-relaxed text-[var(--muted)] sm:text-lg">
-              Traiteur, décoration, événementiel et boutiques mode — S.E Holding
-              réunit tous les métiers de la réception d'exception en République
-              Centrafricaine.
-            </p>
-          </Reveal>
+              <p className="mt-5 max-w-xl text-base leading-relaxed text-[var(--muted)] sm:text-lg">
+                Traiteur, décoration, événementiel et boutiques mode — S.E Holding
+                réunit tous les métiers de la réception d'exception en République
+                Centrafricaine.
+              </p>
+            </Reveal>
 
-          <Reveal delay={0.15}>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <Link
-                href="/devis"
-                className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[linear-gradient(135deg,var(--gold),var(--gold-deep))] px-6 py-3.5 text-sm font-bold text-[#3A1631] shadow-[0_6px_18px_rgba(122,46,102,0.25)] transition-transform hover:-translate-y-0.5 sm:w-auto"
-              >
-                Demander un devis
-                <ArrowRight className="h-4 w-4" />
-              </Link>
+            <Reveal delay={0.15}>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                <Link
+                  href="/devis"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[linear-gradient(135deg,var(--gold),var(--gold-deep))] px-6 py-3.5 text-sm font-bold text-[#3A1631] shadow-[0_6px_18px_rgba(122,46,102,0.25)] transition-transform hover:-translate-y-0.5 sm:w-auto"
+                >
+                  Demander un devis
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
 
-              <Link
-                href="/boutique"
-                className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[var(--gold)] px-6 py-3.5 text-sm font-semibold text-[var(--gold)] transition-colors hover:bg-[var(--gold)] hover:text-[#3A1631] sm:w-auto"
-              >
-                Visiter la boutique
-              </Link>
+                <Link
+                  href="/boutique"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[var(--gold)] px-6 py-3.5 text-sm font-semibold text-[var(--gold)] transition-colors hover:bg-[var(--gold)] hover:text-[#3A1631] sm:w-auto"
+                >
+                  Visiter la boutique
+                </Link>
+              </div>
+            </Reveal>
+          </div>
+
+          {/* Image */}
+          <Reveal delay={0.1}>
+            <div className="relative aspect-[4/5] overflow-hidden rounded-3xl border border-[var(--border)] shadow-[var(--shadow)]">
+              <Image
+                src="https://res.cloudinary.com/lacnn0m0/image/upload/f_auto,q_auto,w_900/v1788439047/t%C3%A9l%C3%A9chargement.jpg"
+                alt="Une réalisation S.E Holding"
+                fill
+                priority
+                sizes="(max-width: 1024px) 100vw, 45vw"
+                className="object-cover"
+              />
             </div>
           </Reveal>
         </div>
