@@ -1,25 +1,46 @@
 @import "tailwindcss";
 
 /* ===================================================================
-   S.E HOLDING — Thème (aubergine / or / crème)
-   Deux ambiances via la classe `light` sur <html>.
-   Palette de marque : blanc crème · violet aubergine · or.
+   S.E HOLDING — Thème
+   Défaut : clair moderne (Playfair Display + Poppins) — « thème 3 ».
+   Bascule (classe `dark` sur <html>) : aubergine sombre + or
+   (Cormorant + Inter) — « thème 1 ».
    =================================================================== */
 
 @theme {
-  /* Typographie */
-  --font-display: 'Cormorant Garamond', Georgia, serif;
-  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-display: var(--font-playfair), Georgia, serif;
+  --font-sans: var(--font-poppins), system-ui, sans-serif;
 
-  /* Marque (constantes, disponibles dans les deux ambiances) */
   --color-gold: #C9A227;
   --color-gold-light: #E4BE55;
   --color-aubergine: #4A1D3F;
   --color-cream: #FAF6EF;
 }
 
-/* ---------- AMBIANCE PAR DÉFAUT : aubergine sombre ---------- */
+/* ---------- DÉFAUT : thème 3 (clair, moderne) ---------- */
 :root {
+  --font-display: var(--font-playfair), Georgia, serif;
+  --font-sans:    var(--font-poppins), system-ui, sans-serif;
+
+  --bg:          #FFFFFF;
+  --bg-2:        #F5F0F3;
+  --surface:     #FBF7FA;
+  --raised:      #FFFFFF;
+  --gold:        #B8901E;
+  --gold-deep:   #9A7715;
+  --text:        #2C1226;
+  --muted:       #6E5866;
+  --faint:       #A08E9B;
+  --border:      rgba(60, 20, 50, 0.14);
+  --border-soft: rgba(60, 20, 50, 0.08);
+  --shadow:      0 20px 50px rgba(60, 20, 50, 0.10);
+}
+
+/* ---------- BASCULE : thème 1 (aubergine sombre + or) ---------- */
+html.dark {
+  --font-display: var(--font-cormorant), Georgia, serif;
+  --font-sans:    var(--font-inter), system-ui, sans-serif;
+
   --bg:          #34122C;
   --bg-2:        #421A38;
   --surface:     #4A1D3F;
@@ -32,22 +53,6 @@
   --border:      rgba(228, 190, 85, 0.22);
   --border-soft: rgba(251, 244, 240, 0.10);
   --shadow:      0 24px 60px rgba(0, 0, 0, 0.45);
-}
-
-/* ---------- AMBIANCE CLAIRE : crème ---------- */
-html.light {
-  --bg:          #F6EFE4;
-  --bg-2:        #EFE6D6;
-  --surface:     #FFFFFF;
-  --raised:      #FFFFFF;
-  --gold:        #B8901E;
-  --gold-deep:   #9A7715;
-  --text:        #3A1631;
-  --muted:       #6E5866;
-  --faint:       #9A8592;
-  --border:      rgba(74, 29, 63, 0.16);
-  --border-soft: rgba(74, 29, 63, 0.10);
-  --shadow:      0 20px 50px rgba(74, 29, 63, 0.12);
 }
 
 @layer base {
@@ -70,11 +75,10 @@ html.light {
   ::-webkit-scrollbar-thumb:hover { background: var(--gold); }
 }
 
-/* Petit utilitaire pour la typo de titre */
+/* Utilitaire pour la typo de titre */
 .font-display { font-family: var(--font-display); }
 
-/* ===== À AJOUTER À LA FIN DE globals.css =====
-   Style commun des champs de formulaire (devis, etc.) */
+/* Champs de formulaire (devis, login, etc.) */
 .se-input {
   width: 100%;
   font-family: inherit;
@@ -90,7 +94,7 @@ html.light {
 .se-input::placeholder { color: var(--faint); }
 .se-input:focus {
   border-color: var(--gold);
-  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.15);
+  box-shadow: 0 0 0 3px rgba(184, 144, 30, 0.15);
 }
 /* Empêche le fond blanc de l'auto-remplissage Chrome/Safari
    et conserve la couleur du thème sur les champs .se-input */
