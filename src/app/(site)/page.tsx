@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import Reveal from "@/components/motion/Reveal";
 import { StaggerGroup, StaggerItem } from "@/components/motion/Stagger";
 import {
@@ -63,23 +62,10 @@ export default function Home() {
   return (
     <>
       {/* HERO */}
-      <section className="relative flex min-h-[80vh] items-center overflow-hidden">
-        {/* Image de fond (Cloudinary) */}
-        <Image
-          src="https://res.cloudinary.com/lacnn0m0/image/upload/f_auto,q_auto,w_1920/v1788439047/t%C3%A9l%C3%A9chargement.jpg"
-          alt="S.E Holding — réception d'exception"
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover"
-        />
+      <section className="relative overflow-hidden">
+        <div className="pointer-events-none absolute right-[-18%] top-[-22%] h-72 w-72 rounded-full bg-[radial-gradient(circle,var(--gold),transparent_70%)] opacity-10 sm:h-96 sm:w-96" />
 
-        {/* Dégradé aubergine pour la lisibilité du texte */}
-        <div className="absolute inset-0 bg-[linear-gradient(100deg,#2a0f24_0%,rgba(42,15,36,0.92)_32%,rgba(42,15,36,0.6)_68%,rgba(42,15,36,0.35)_100%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent_55%,var(--bg))]" />
-
-        {/* Contenu */}
-        <div className="relative z-10 mx-auto w-full max-w-6xl px-4 py-20 sm:px-6 md:py-24 lg:py-28">
+        <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 md:py-24 lg:py-28">
           <Reveal>
             <span className="mb-5 inline-flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.25em] text-[var(--gold)] sm:text-xs sm:tracking-[0.3em]">
               <span className="inline-block h-1.5 w-1.5 rotate-45 bg-[var(--gold)]" />
@@ -102,7 +88,7 @@ export default function Home() {
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <Link
                 href="/devis"
-                className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[linear-gradient(135deg,var(--gold),var(--gold-deep))] px-6 py-3.5 text-sm font-bold text-[#3A1631] shadow-[0_6px_18px_rgba(201,162,39,0.25)] transition-transform hover:-translate-y-0.5 sm:w-auto"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[linear-gradient(135deg,var(--gold),var(--gold-deep))] px-6 py-3.5 text-sm font-bold text-[#3A1631] shadow-[0_6px_18px_rgba(122,46,102,0.25)] transition-transform hover:-translate-y-0.5 sm:w-auto"
               >
                 Demander un devis
                 <ArrowRight className="h-4 w-4" />

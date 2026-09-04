@@ -2,7 +2,7 @@
 
 /* ===================================================================
    S.E HOLDING — Thème
-   Défaut : clair moderne (Playfair Display + Poppins) — « thème 3 ».
+   Défaut : clair moderne, accent VIOLET (Playfair Display + Poppins) — « thème 3 ».
    Bascule (classe `dark` sur <html>) : aubergine sombre + or
    (Cormorant + Inter) — « thème 1 ».
    =================================================================== */
@@ -17,7 +17,7 @@
   --color-cream: #FAF6EF;
 }
 
-/* ---------- DÉFAUT : thème 3 (clair, moderne) ---------- */
+/* ---------- DÉFAUT : thème 3 (clair, accent violet) ---------- */
 :root {
   --font-display: var(--font-playfair), Georgia, serif;
   --font-sans:    var(--font-poppins), system-ui, sans-serif;
@@ -26,8 +26,8 @@
   --bg-2:        #F5F0F3;
   --surface:     #FBF7FA;
   --raised:      #FFFFFF;
-  --gold:        #B8901E;
-  --gold-deep:   #9A7715;
+  --gold:        #7A2E66;
+  --gold-deep:   #5E2350;
   --text:        #2C1226;
   --muted:       #6E5866;
   --faint:       #A08E9B;
@@ -94,10 +94,8 @@ html.dark {
 .se-input::placeholder { color: var(--faint); }
 .se-input:focus {
   border-color: var(--gold);
-  box-shadow: 0 0 0 3px rgba(184, 144, 30, 0.15);
+  box-shadow: 0 0 0 3px rgba(122, 46, 102, 0.15);
 }
-/* Empêche le fond blanc de l'auto-remplissage Chrome/Safari
-   et conserve la couleur du thème sur les champs .se-input */
 .se-input:-webkit-autofill,
 .se-input:-webkit-autofill:hover,
 .se-input:-webkit-autofill:focus {
@@ -106,3 +104,8 @@ html.dark {
   caret-color: var(--text);
   transition: background-color 9999s ease-in-out 0s;
 }
+
+/* En thème clair, l'accent doré devient violet : le texte des boutons
+   (codé en #3A1631) passe en blanc pour rester lisible. En sombre, il
+   reste foncé sur l'or. */
+html:not(.dark) .text-\[\#3A1631\] { color: #FFFFFF; }
