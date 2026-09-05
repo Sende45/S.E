@@ -10,6 +10,7 @@ import {
   Shirt,
   Footprints,
   Gem,
+  ShoppingCart,
   ArrowRight,
   Phone,
   MessageCircle,
@@ -57,6 +58,13 @@ const univers = [
     titre: "Accessoires",
     desc: "Sacs, bijoux, foulards et montres pour parfaire chaque tenue.",
     type: "boutique",
+  },
+  {
+    href: "/supermarche",
+    icon: ShoppingCart,
+    titre: "Supermarché",
+    desc: "Alimentation, liqueurs, hygiène et mini-shop — livrés chez vous à Bangui.",
+    type: "supermarche",
   },
 ];
 
@@ -138,7 +146,7 @@ export default function Home() {
           </span>
 
           <h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl lg:text-5xl">
-            Six métiers, une même exigence
+            Sept métiers, une même exigence
           </h2>
         </Reveal>
 
@@ -159,7 +167,11 @@ export default function Home() {
                 </span>
 
                 <div className="mb-2 text-[10px] font-bold uppercase tracking-widest text-[var(--gold)]">
-                  {u.type === "boutique" ? "Boutique" : "Service"}
+                  {u.type === "boutique"
+                    ? "Boutique"
+                    : u.type === "supermarche"
+                    ? "Supermarché"
+                    : "Service"}
                 </div>
 
                 <h3 className="font-display text-xl font-semibold lg:text-2xl">

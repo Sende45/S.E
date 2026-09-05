@@ -50,6 +50,7 @@ export default function RootLayout({
   return (
     <html
       lang="fr"
+      suppressHydrationWarning
       className={`${inter.variable} ${cormorant.variable} ${playfair.variable} ${poppins.variable}`}
     >
       <head>
