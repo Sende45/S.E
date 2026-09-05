@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 import ThemeToggle from "@/components/ThemeToggle";
 import CartButton from "@/components/CartButton";
 
@@ -20,6 +21,7 @@ const navItems = [
 export default function Header() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const reduce = useReducedMotion();
 
   // Ferme automatiquement le menu lors d'un changement de page
   useEffect(() => {
@@ -31,9 +33,18 @@ export default function Header() {
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:h-18 sm:px-6 lg:h-20">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 sm:gap-3">
-          <span className="grid h-9 w-9 place-items-center rounded-full border border-[var(--gold)] bg-[radial-gradient(circle_at_50%_40%,#2a0f24,#140812)] font-display text-sm font-bold text-[var(--gold)] sm:h-11 sm:w-11 sm:text-base">
+          <motion.span
+            className="grid h-9 w-9 place-items-center rounded-full border border-[var(--gold)] bg-[radial-gradient(circle_at_50%_40%,#2a0f24,#140812)] font-display text-sm font-bold text-[var(--gold)] sm:h-11 sm:w-11 sm:text-base"
+            animate={reduce ? undefined : { scale: [1, 1.07, 1] }}
+            transition={
+              reduce
+                ? undefined
+                : { duration: 3.2, repeat: Infinity, ease: "easeInOut" }
+            }
+            whileHover={{ scale: 1.15, rotate: -8 }}
+          >
             S.E
-          </span>
+          </motion.span>
 
           <span className="leading-none">
             <span className="font-display text-base font-bold tracking-wide sm:text-xl">
