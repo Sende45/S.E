@@ -69,7 +69,7 @@ export default function Header() {
         </nav>
 
         {/* Actions */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 lg:ml-8">
           <ThemeToggle />
 
           <CartButton />
