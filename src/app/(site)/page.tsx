@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import Reveal from "@/components/motion/Reveal";
+import Float from "@/components/motion/Float";
 import { StaggerGroup, StaggerItem } from "@/components/motion/Stagger";
 import {
   UtensilsCrossed,
@@ -74,12 +75,16 @@ export default function Home() {
                 <span className="inline-block h-1.5 w-1.5 rotate-45 bg-[var(--gold)]" />
                 L'excellence S.E
               </span>
+            </Reveal>
 
+            <Reveal delay={0.12}>
               <h1 className="max-w-[16ch] font-display text-4xl font-semibold leading-tight sm:text-5xl lg:text-6xl lg:leading-[1.05]">
                 Un service de{" "}
-                <em className="italic text-[var(--gold)]">qualité</em> et de saveurs
+                <em className="text-shimmer italic">qualité</em> et de saveurs
               </h1>
+            </Reveal>
 
+            <Reveal delay={0.24}>
               <p className="mt-5 max-w-xl text-base leading-relaxed text-[var(--muted)] sm:text-lg">
                 Traiteur, décoration, événementiel et boutiques mode — S.E Holding
                 réunit tous les métiers de la réception d'exception en République
@@ -87,7 +92,7 @@ export default function Home() {
               </p>
             </Reveal>
 
-            <Reveal delay={0.15}>
+            <Reveal delay={0.36}>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <Link
                   href="/devis"
@@ -108,17 +113,19 @@ export default function Home() {
           </div>
 
           {/* Image */}
-          <Reveal delay={0.1}>
-            <div className="relative aspect-[4/5] overflow-hidden rounded-3xl border border-[var(--border)] shadow-[var(--shadow)]">
-              <Image
-                src="https://res.cloudinary.com/lacnn0m0/image/upload/f_auto,q_auto,w_900/v1788439047/t%C3%A9l%C3%A9chargement.jpg"
-                alt="Une réalisation S.E Holding"
-                fill
-                priority
-                sizes="(max-width: 1024px) 100vw, 45vw"
-                className="object-cover"
-              />
-            </div>
+          <Reveal delay={0.15}>
+            <Float amplitude={14} duration={7}>
+              <div className="relative aspect-[4/5] overflow-hidden rounded-3xl border border-[var(--border)] shadow-[var(--shadow)]">
+                <Image
+                  src="https://res.cloudinary.com/lacnn0m0/image/upload/f_auto,q_auto,w_900/v1788439047/t%C3%A9l%C3%A9chargement.jpg"
+                  alt="Une réalisation S.E Holding"
+                  fill
+                  priority
+                  sizes="(max-width: 1024px) 100vw, 45vw"
+                  className="object-cover"
+                />
+              </div>
+            </Float>
           </Reveal>
         </div>
       </section>
